@@ -933,7 +933,8 @@
   $$("[data-open-cfg]").forEach((b) => (b.onclick = openCfg));
 
   /* highlight the category chip of the section in view (phone/tablet bar) */
-  if ("IntersectionObserver" in window) {
+  function observeCats() {
+    if (!("IntersectionObserver" in window)) return;
     const io = new IntersectionObserver((ents) => ents.forEach((en) => {
       if (!en.isIntersecting) return;
       $$("#mobileCats a").forEach((a) => {
@@ -948,6 +949,7 @@
   /* ---------------------------------------------------------------- init */
   loadCfg();
   renderExplorer();
+  observeCats();
   resizeCanvas();
   onCfgChanged();
   setArmed(false);
