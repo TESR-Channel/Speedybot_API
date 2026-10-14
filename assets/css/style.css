@@ -324,7 +324,7 @@ section.block { padding: 56px 0; }
 .kv dd { margin: 0; font-family: var(--f-mono); word-break: break-all; }
 
 /* ---------------------------------------------------------------- explorer */
-.explorer { display: grid; grid-template-columns: 250px 1fr; gap: 22px; align-items: start; }
+.explorer { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; align-items: start; }
 .side { position: sticky; top: 86px; max-height: calc(100vh - 100px); overflow: auto; padding: 10px; }
 .side input[type="search"] {
   width: 100%; height: 38px; border-radius: 8px; border: 1px solid var(--line-2); background: rgba(0,0,0,.35);
@@ -355,7 +355,7 @@ section.block { padding: 56px 0; }
   border: 3px solid var(--red-2); box-shadow: 0 0 0 4px rgba(227, 50, 74, 0.25), 0 0 18px rgba(227, 50, 74, .7);
 }
 
-.ep { margin-bottom: 14px; overflow: hidden; scroll-margin-top: 90px; }
+.ep { margin-bottom: 14px; overflow: hidden; min-width: 0; scroll-margin-top: 90px; }
 .ep.flash { animation: flash 1.4s; }
 @keyframes flash { 0%, 40% { box-shadow: 0 0 0 2px var(--red-2), var(--shadow); } 100% { box-shadow: var(--shadow); } }
 .ep-head { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; cursor: pointer; }
@@ -545,14 +545,14 @@ footer.site .grow { flex: 1; }
 /* ---------- large desktop */
 @media (min-width: 1500px) {
   .wrap { width: min(1380px, 100% - 64px); }
-  .explorer { grid-template-columns: 270px 1fr; }
+  .explorer { grid-template-columns: 270px minmax(0, 1fr); }
 }
 
 /* ---------- small desktop / tablet landscape */
 @media (max-width: 1280px) {
   .ep.open .ep-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .side { padding: 8px; }
-  .explorer { grid-template-columns: 230px 1fr; }
+  .explorer { grid-template-columns: 230px minmax(0, 1fr); }
 }
 
 /* ---------- TABLET & below (no top nav, no sidebar) */
@@ -562,17 +562,17 @@ footer.site .grow { flex: 1; }
   .menu-btn { display: inline-flex; }
 
   .hero { padding: 44px 0 30px; }
-  .about-grid { grid-template-columns: 1fr; }
+  .about-grid { grid-template-columns: minmax(0, 1fr); }
 
   /* dashboard: stacked; control card becomes a 2-column panel */
-  .dash { grid-template-columns: 1fr; }
+  .dash { grid-template-columns: minmax(0, 1fr); }
   .ctrl-card { grid-template-columns: minmax(250px, 0.8fr) 1.2fr; column-gap: 22px; }
   .ctrl-card > .ctrl-quick { border-top: 0; margin-top: 0; padding-top: 0; border-left: 1px solid var(--line); padding-left: 22px; }
   .ctrl-card > .ctrl-log { grid-column: 1 / -1; }
   .map-box { height: 400px; }
 
   /* explorer: sticky search + category chips instead of sidebar */
-  .explorer { grid-template-columns: 1fr; }
+  .explorer { grid-template-columns: minmax(0, 1fr); }
   .side { display: none; }
   .xbar {
     display: block; position: sticky; top: 66px; z-index: 20; margin: 0 -16px 16px; padding: 10px 16px 8px;
@@ -586,13 +586,13 @@ footer.site .grow { flex: 1; }
 
 /* ---------- TABLET portrait */
 @media (max-width: 899px) {
-  .hero .wrap { grid-template-columns: 1fr; gap: 30px; }
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); gap: 30px; }
   .hero p.lead { max-width: none; }
   .steps { max-width: none; }
   .robot-fig { width: 100%; max-width: 600px; margin: 0 auto; }
   .legend { grid-template-columns: 1fr 1fr 1fr; }
-  .sign-grid { grid-template-columns: 1fr; }
-  .ep.open .ep-body { grid-template-columns: 1fr; }
+  .sign-grid { grid-template-columns: minmax(0, 1fr); }
+  .ep.open .ep-body { grid-template-columns: minmax(0, 1fr); }
   .ep-left { border-right: 0; border-bottom: 1px solid var(--line); }
   .cat-banner { grid-template-columns: 140px 1fr; }
   .tiles { grid-template-columns: repeat(4, 1fr); }
@@ -602,7 +602,7 @@ footer.site .grow { flex: 1; }
 /* ---------- small tablet / large phone landscape */
 @media (max-width: 760px) {
   .tiles { grid-template-columns: repeat(2, 1fr); }
-  .ctrl-card { grid-template-columns: 1fr; }
+  .ctrl-card { grid-template-columns: minmax(0, 1fr); }
   .ctrl-card > .ctrl-quick { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); margin-top: 16px; padding-top: 16px; }
   .legend { grid-template-columns: 1fr 1fr; }
   .sdk-grid, .sdk-grid.two { grid-template-columns: 1fr; }
