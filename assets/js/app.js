@@ -381,91 +381,183 @@
   window.addEventListener("blur", () => holdDir && holdStop(true));
 
   /* ---------------------------------------------------------------- map */
-  const map = { data: null, img: null, s: 1, ox: 0, oy: 0, robot: null, sel: null, dpr: 1, abort: null };
+  // view = { id, name, title, floor, width, height, res, realX, realY, url, isCurrent }
+  const map = { list: [], current: null, view: null, img: null, s: 1, ox: 0, oy: 0, robot: null, sel: null, marks: [], dpr: 1, abort: null };
   const cv = $("#mapCanvas"), ctx = cv.getContext("2d"), box = $("#mapBox");
+  const isLight = () => document.documentElement.getAttribute("data-theme") === "light";
+  const sameId = (a, b) => String(a) === String(b);
+  const mapTitle = (m) => (m && (m.mapName || m.name)) || "—";
   function resizeCanvas() {
     map.dpr = window.devicePixelRatio || 1;
     cv.width = box.clientWidth * map.dpr; cv.height = box.clientHeight * map.dpr;
     draw();
   }
   function fitMap() {
-    if (!map.data) return;
+    const v = map.view; if (!v || !v.width) return;
     const w = box.clientWidth, h = box.clientHeight;
-    map.s = Math.min(w / map.data.width, h / map.data.height) * 0.94;
-    map.ox = (w - map.data.width * map.s) / 2; map.oy = (h - map.data.height * map.s) / 2;
-    draw();
+    map.s = Math.min(w / v.width, h / v.height) * 0.94;
+    map.ox = (w - v.width * map.s) / 2; map.oy = (h - v.height * map.s) / 2;
+    draw(); positionPop();
   }
   const toScreen = (x, y) => [map.ox + x * map.s, map.oy + y * map.s];
+  /* metres → map-image pixels (ROS map: origin bottom-left, y up). Verified against #27 graphicPointList. */
+  const m2px = (v, x, y) => [(x - v.realX) / v.res, v.height - (y - v.realY) / v.res];
+
+  function buildMarks() {
+    const v = map.view; map.marks = [];
+    if (!v || !v.isCurrent) return;
+    state.points.filter((p) => sameId(p.mapId, v.id)).forEach((p) => {
+      const [px, py] = m2px(v, +p.pointX, +p.pointY);
+      map.marks.push({ name: p.pointName, id: p.id, flag: p.flagName, px, py });
+    });
+    (map.current.graphicPointList || []).forEach((g) => {
+      if (!map.marks.some((m) => m.name === g.pointName)) map.marks.push({ name: g.pointName, id: null, px: g.pointX, py: g.pointY });
+    });
+  }
   function draw() {
     ctx.setTransform(map.dpr, 0, 0, map.dpr, 0, 0);
     ctx.clearRect(0, 0, cv.width, cv.height);
-    if (!map.data) return;
+    const v = map.view;
+    if (!v || !v.width) return;
+    const light = isLight();
     ctx.save();
     ctx.translate(map.ox, map.oy); ctx.scale(map.s, map.s);
     ctx.imageSmoothingEnabled = map.s < 1;
     if (map.img && map.img.complete && map.img.naturalWidth) {
-      ctx.globalAlpha = 0.85; ctx.filter = "invert(1) hue-rotate(180deg) brightness(0.9)";
-      ctx.drawImage(map.img, 0, 0, map.data.width, map.data.height);
+      ctx.globalAlpha = light ? 1 : 0.85;
+      ctx.filter = light ? "none" : "invert(1) hue-rotate(180deg) brightness(0.9)";
+      ctx.drawImage(map.img, 0, 0, v.width, v.height);
       ctx.filter = "none"; ctx.globalAlpha = 1;
     } else {
-      ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.lineWidth = 2 / map.s; ctx.strokeRect(0, 0, map.data.width, map.data.height);
+      ctx.strokeStyle = light ? "rgba(70,20,28,.3)" : "rgba(255,255,255,.2)"; ctx.lineWidth = 2 / map.s; ctx.strokeRect(0, 0, v.width, v.height);
     }
     ctx.restore();
-    // points
-    (map.data.graphicPointList || []).forEach((p) => {
-      const [x, y] = toScreen(p.pointX, p.pointY);
-      const on = map.sel === p;
+    // points (current map only — other maps have no origin data in the API)
+    map.marks.forEach((m) => {
+      const [x, y] = toScreen(m.px, m.py);
+      const on = map.sel === m;
       ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = on ? "#e3324a" : "#d8b66c"; ctx.strokeStyle = "#140608"; ctx.lineWidth = 2;
+      ctx.fillStyle = on ? "#e3324a" : light ? "#c99a2e" : "#d8b66c"; ctx.strokeStyle = light ? "#fff" : "#140608"; ctx.lineWidth = 2;
       const r = on ? 8 : 6; ctx.fillRect(-r, -r, r * 2, r * 2); ctx.strokeRect(-r, -r, r * 2, r * 2);
       ctx.restore();
       ctx.font = "600 12px Kanit, sans-serif"; ctx.textAlign = "center";
-      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(10,3,5,.9)"; ctx.strokeText(p.pointName, x, y - 13);
-      ctx.fillStyle = "#fff"; ctx.fillText(p.pointName, x, y - 13);
+      ctx.lineWidth = 4; ctx.strokeStyle = light ? "rgba(255,255,255,.95)" : "rgba(10,3,5,.9)"; ctx.strokeText(m.name, x, y - 13);
+      ctx.fillStyle = light ? "#1f0d11" : "#fff"; ctx.fillText(m.name, x, y - 13);
     });
-    // robot
-    if (map.robot) {
+    // robot (live SSE position is in current-map pixels)
+    if (map.robot && v.isCurrent) {
       const [x, y] = toScreen(map.robot.pointX, map.robot.pointY);
       const a = -((map.robot.rotation || 0) * Math.PI) / 180;
       ctx.save(); ctx.translate(x, y);
-      ctx.fillStyle = "rgba(44,199,240,.18)"; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(44,199,240,.2)"; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
       ctx.rotate(a);
-      ctx.fillStyle = "#2cc7f0"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+      ctx.fillStyle = light ? "#0a9ccc" : "#2cc7f0"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-9, -9); ctx.lineTo(-4, 0); ctx.lineTo(-9, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.restore();
     }
   }
+
+  function imgUrlFor(m) {
+    if (!map.current) return null;
+    if (sameId(m.id, map.current.id)) return map.current.mapUrl;
+    const u = map.current.mapUrl || "";
+    return u ? u.slice(0, u.lastIndexOf("/") + 1) + encodeURIComponent(m.name) + ".png" : null;
+  }
   async function loadMap() {
     if (needCfg()) return;
-    $("#mapEmpty").textContent = "กำลังโหลดแผนที่…";
-    const r = await run("map-detail");
-    if (!r || !r.ok) { $("#mapEmpty").textContent = "โหลดแผนที่ไม่สำเร็จ: " + humanCode(r); return; }
-    map.data = r.json.data; map.sel = null;
-    $("#mapEmpty").hidden = true;
-    $("#mapInfo").hidden = false;
-    $("#mapInfo").textContent = `${map.data.mapName} · ${map.data.width}×${map.data.height}px · ${map.data.resolution} m/px`;
-    map.img = new Image();
-    map.img.referrerPolicy = "no-referrer";
-    map.img.onload = draw;
-    map.img.onerror = () => toast("โหลดรูปแผนที่ไม่ได้ (แสดงเฉพาะจุด)", "");
-    map.img.src = map.data.mapUrl;
-    fitMap();
-    loadPoints(true);
+    const btn = $("#loadMapBtn");
+    $("#mapEmpty").hidden = false; $("#mapEmpty").textContent = "กำลังโหลดแผนที่…";
+    btn.disabled = true;
+    const [rl, rc] = await Promise.all([run("maps", {}, { quiet: true }), run("map-detail")]);
+    btn.disabled = false;
+    if (!rc || !rc.ok) { $("#mapEmpty").textContent = "โหลดแผนที่ไม่สำเร็จ: " + humanCode(rc); return; }
+    map.current = rc.json.data;
+    map.list = rl && rl.ok && Array.isArray(rl.json.data) ? rl.json.data.slice() : [];
+    if (!map.list.some((m) => sameId(m.id, map.current.id)))
+      map.list.unshift({ id: map.current.id, name: map.current.name, mapName: map.current.mapName, floor: map.current.floor, isDefault: map.current.isDefault });
+    // current map first
+    map.list.sort((a, b) => (sameId(b.id, map.current.id) ? 1 : 0) - (sameId(a.id, map.current.id) ? 1 : 0));
+    await loadPoints(true);
+    renderPicker();
+    selectMap(map.view && map.list.some((m) => sameId(m.id, map.view.id)) ? map.view.id : map.current.id);
+    btn.textContent = "รีเฟรชแผนที่";
   }
   $("#loadMapBtn").onclick = loadMap;
+
+  function renderPicker() {
+    if (!map.current) return;
+    $("#mapPicker").innerHTML = map.list.map((m) => {
+      const cur = sameId(m.id, map.current.id);
+      const n = state.points.filter((p) => sameId(p.mapId, m.id)).length;
+      const url = imgUrlFor(m);
+      return `<button type="button" class="map-card" role="option" aria-selected="false" data-map="${esc(m.id)}" title="${esc(mapTitle(m))} (id ${esc(m.id)}, file ${esc(m.name)})">
+        <div class="thumb"><em>ไม่มีรูปแผนที่</em>${url ? `<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()" />` : ""}</div>
+        <div class="meta"><b>${esc(mapTitle(m))}</b><small>${cur ? '<span class="live-tag">ใช้งานอยู่</span>' : ""}ชั้น ${esc(m.floor ?? "-")} · ${n} จุด</small></div>
+      </button>`;
+    }).join("");
+    if (map.view) markPicker(map.view.id);
+  }
+  function markPicker(id) {
+    $$("#mapPicker .map-card").forEach((c) => { const on = sameId(c.dataset.map, id); c.classList.toggle("on", on); c.setAttribute("aria-selected", on); });
+  }
+  $("#mapPicker").onclick = (e) => { const c = e.target.closest("[data-map]"); if (c) selectMap(c.dataset.map); };
+
+  function selectMap(id) {
+    const m = map.list.find((x) => sameId(x.id, id)); if (!m || !map.current) return;
+    const c = map.current, isCurrent = sameId(id, c.id);
+    markPicker(id);
+    map.sel = null; $("#mapPop")?.remove();
+    const v = isCurrent
+      ? { id: c.id, name: c.name, title: mapTitle(c), floor: c.floor, width: c.width, height: c.height, res: c.resolution, realX: c.realX, realY: c.realY, url: c.mapUrl, isCurrent: true }
+      : { id: m.id, name: m.name, title: mapTitle(m), floor: m.floor, width: 0, height: 0, url: imgUrlFor(m), isCurrent: false };
+    map.view = v;
+    buildMarks();
+    $("#mapEmpty").hidden = true;
+    const img = new Image();
+    img.referrerPolicy = "no-referrer";
+    img.onload = () => {
+      if (map.view !== v) return;
+      if (!v.width) { v.width = img.naturalWidth; v.height = img.naturalHeight; fitMap(); } else draw();
+      updateMapInfo();
+    };
+    img.onerror = () => {
+      if (map.view !== v) return;
+      if (!v.width) { $("#mapEmpty").hidden = false; $("#mapEmpty").textContent = `ไม่พบรูปของแผนที่ “${v.title}” บนเซิร์ฟเวอร์ผู้ผลิต`; draw(); }
+      else toast("โหลดรูปแผนที่ไม่ได้ (แสดงเฉพาะจุด)");
+    };
+    map.img = img;
+    if (v.url) img.src = v.url; else img.onerror();
+    if (v.width) fitMap(); else draw();
+    updateMapInfo(); renderMapNote(); renderPointChips();
+  }
+  function updateMapInfo() {
+    const v = map.view, el = $("#mapInfo");
+    el.hidden = !v; if (!v) return;
+    el.textContent = [v.title, v.floor != null ? "ชั้น " + v.floor : "", v.width ? `${v.width}×${v.height}px` : "", v.res ? v.res + " m/px" : "", v.isCurrent ? "● ใช้งานอยู่" : "ดูตัวอย่าง"].filter(Boolean).join(" · ");
+  }
+  function renderMapNote() {
+    const v = map.view, el = $("#mapNote");
+    if (!v || v.isCurrent) { el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = `${svg("info")}<span><b>โหมดดูตัวอย่าง</b> — หุ่นใช้แผนที่ “${esc(mapTitle(map.current))}” อยู่ · API v5 ยังไม่มีคำสั่งสลับแผนที่ (ต้องสลับที่ตัวหุ่นหรือแอปผู้ผลิต) จึงแสดงได้เฉพาะรูปแผนที่และรายชื่อจุด ไม่มีตำแหน่งหุ่นสด
+      <button class="btn xs" type="button" data-map-back>กลับไปแผนที่ที่ใช้อยู่</button></span>`;
+  }
+  $("#mapNote").onclick = (e) => { if (e.target.closest("[data-map-back]") && map.current) selectMap(map.current.id); };
+
   $("#zoomIn").onclick = () => zoomAt(box.clientWidth / 2, box.clientHeight / 2, 1.35);
   $("#zoomOut").onclick = () => zoomAt(box.clientWidth / 2, box.clientHeight / 2, 1 / 1.35);
   $("#zoomFit").onclick = fitMap;
+  const mapReady = () => map.view && map.view.width;
   function zoomAt(cx, cy, f) {
-    if (!map.data) return;
+    if (!mapReady()) return;
     const ns = Math.min(8, Math.max(0.02, map.s * f));
     map.ox = cx - ((cx - map.ox) * ns) / map.s; map.oy = cy - ((cy - map.oy) * ns) / map.s; map.s = ns;
     draw(); positionPop();
   }
-  box.addEventListener("wheel", (e) => { if (!map.data) return; e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
+  box.addEventListener("wheel", (e) => { if (!mapReady()) return; e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
   let drag = null;
   box.addEventListener("pointerdown", (e) => {
-    if (!map.data || e.target.closest(".map-tools,.map-pop")) return;
+    if (!mapReady() || e.target.closest(".map-tools,.map-pop")) return;
     drag = { x: e.clientX, y: e.clientY, ox: map.ox, oy: map.oy, moved: false };
     box.setPointerCapture(e.pointerId); box.classList.add("drag");
   });
@@ -482,35 +574,30 @@
   });
   function pickPoint(e) {
     const r = box.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-    let best = null, bd = 16;
-    (map.data.graphicPointList || []).forEach((p) => { const [x, y] = toScreen(p.pointX, p.pointY); const d = Math.hypot(x - mx, y - my); if (d < bd) { bd = d; best = p; } });
+    let best = null, bd = 18;
+    map.marks.forEach((m) => { const [x, y] = toScreen(m.px, m.py); const d = Math.hypot(x - mx, y - my); if (d < bd) { bd = d; best = m; } });
     map.sel = best; draw(); showPop();
-  }
-  function findPointId(name) {
-    const mapName = map.data && map.data.mapName;
-    const hit = state.points.find((p) => p.pointName === name && (!mapName || p.mapName === mapName)) || state.points.find((p) => p.pointName === name);
-    return hit ? hit.id : null;
   }
   function showPop() {
     $("#mapPop")?.remove();
     if (!map.sel) return;
-    const p = map.sel, id = findPointId(p.pointName);
+    const p = map.sel;
     const el = document.createElement("div");
     el.className = "map-pop"; el.id = "mapPop";
-    el.innerHTML = `<h4>${esc(p.pointName)}</h4><p>px (${Math.round(p.pointX)}, ${Math.round(p.pointY)})${id ? " · id " + id : ""}</p>
-      <div class="actions">${id ? `<button class="btn xs danger" type="button" data-goto="${id}">${svg("pin")}ไปที่จุดนี้</button>` : `<button class="btn xs" type="button" data-loadpts>โหลด ID จุด (#14)</button>`}
+    el.innerHTML = `<h4>${esc(p.name)}</h4><p>${p.id ? "id " + p.id + " · " : ""}${esc(p.flag || "")}${p.flag ? " · " : ""}px (${Math.round(p.px)}, ${Math.round(p.py)})</p>
+      <div class="actions">${p.id ? `<button class="btn xs danger" type="button" data-goto="${p.id}">${svg("pin")}ไปที่จุดนี้</button>` : `<button class="btn xs" type="button" data-loadpts>โหลด ID จุด (#14)</button>`}
       <button class="btn xs ghost" type="button" data-closepop>ปิด</button></div>`;
     box.appendChild(el); positionPop();
     el.onclick = async (ev) => {
       if (ev.target.closest("[data-closepop]")) { map.sel = null; el.remove(); draw(); }
-      if (ev.target.closest("[data-loadpts]")) { await loadPoints(); showPop(); }
+      if (ev.target.closest("[data-loadpts]")) { await loadPoints(); }
       const g = ev.target.closest("[data-goto]");
-      if (g) { const r = await guardedRun(EP["goto-id"], { id: g.dataset.goto }); if (r && r.ok) toast(`🚀 กำลังไป ${esc(p.pointName)}`, "ok"); }
+      if (g) gotoPoint(g.dataset.goto);
     };
   }
   function positionPop() {
     const el = $("#mapPop"); if (!el || !map.sel) return;
-    const [x, y] = toScreen(map.sel.pointX, map.sel.pointY);
+    const [x, y] = toScreen(map.sel.px, map.sel.py);
     el.style.left = Math.max(100, Math.min(box.clientWidth - 100, x)) + "px"; el.style.top = Math.max(110, y) + "px";
   }
   window.addEventListener("resize", () => { resizeCanvas(); positionPop(); });
@@ -530,7 +617,8 @@
   $("#sseToggle").onchange = (e) => {
     if (e.target.checked) {
       if (needCfg()) { e.target.checked = false; return; }
-      if (!map.data) loadMap();
+      if (!map.current) loadMap();
+      else if (map.view && !map.view.isCurrent) selectMap(map.current.id);
       toast("เริ่มฟังตำแหน่งสด (SSE)", "ok");
       sseLoop();
     } else if (map.abort) map.abort.abort();
@@ -540,22 +628,41 @@
   async function loadPoints(quiet) {
     const r = await run("points", {}, { quiet });
     if (!r || !r.ok) return [];
-    state.points = [];
-    (r.json.data || []).forEach((g) => (g.pointList || []).forEach((p) => state.points.push({ ...p, flagName: g.pointFlagName })));
-    renderPointChips();
-    $$("select[data-picker=point]").forEach(fillPointSelect);
+    setPoints(r.json.data);
     if (!quiet) toast(`โหลดจุดแล้ว ${state.points.length} จุด`, "ok");
     return state.points;
   }
-  function renderPointChips() {
-    $("#pointsList").innerHTML = state.points.map((p) =>
-      `<span class="chip">${esc(p.pointName)} <em>#${p.id} · ${esc(p.flagName || "")}</em><button class="btn xs danger" type="button" data-goto="${p.id}" title="#23 ไปที่จุดนี้">ไป</button></span>`).join("");
+  function setPoints(groups) {
+    state.points = [];
+    (groups || []).forEach((g) => (g.pointList || []).forEach((p) => state.points.push({ ...p, flagName: g.pointFlagName })));
+    $$("select[data-picker=point]").forEach(fillPointSelect);
+    if (map.current) { renderPicker(); buildMarks(); draw(); }
+    renderPointChips();
   }
-  $("#pointsList").onclick = async (e) => {
-    const g = e.target.closest("[data-goto]"); if (!g) return;
-    const r = await guardedRun(EP["goto-id"], { id: g.dataset.goto });
-    if (r && r.ok) toast("🚀 ส่งคำสั่งไปยังจุดแล้ว", "ok");
-  };
+  function renderPointChips() {
+    const v = map.view;
+    const list = v ? state.points.filter((p) => sameId(p.mapId, v.id)) : state.points;
+    const head = $("#pointsHead");
+    head.hidden = !v && !state.points.length;
+    head.innerHTML = v
+      ? `${svg("pin", 'width="15" height="15"')}จุดในแผนที่ <b>${esc(v.title)}</b> · ${list.length} จุด ${v.isCurrent ? "" : '<span class="badge note">ไม่ใช่แผนที่ที่ใช้อยู่</span>'}`
+      : `จุดทั้งหมด · ${list.length} จุด`;
+    $("#pointsList").innerHTML = list.length ? list.map((p) =>
+      `<span class="chip">${esc(p.pointName)} <em>#${p.id} · ${esc(p.flagName || "")}</em><button class="btn xs danger" type="button" data-goto="${p.id}" title="#23 ไปที่จุดนี้">ไป</button></span>`).join("")
+      : (v ? '<span class="chip"><em>ยังไม่มีจุดบนแผนที่นี้</em></span>' : "");
+  }
+  async function gotoPoint(id) {
+    const p = state.points.find((x) => sameId(x.id, id));
+    if (p && map.current && !sameId(p.mapId, map.current.id)) {
+      const other = map.list.find((m) => sameId(m.id, p.mapId));
+      const ok = await ask("จุดนี้อยู่บนแผนที่อื่น",
+        `<p style="margin:0">“${esc(p.pointName)}” อยู่บนแผนที่ <b>${esc(mapTitle(other) || p.mapName)}</b> แต่หุ่นใช้แผนที่ <b>${esc(mapTitle(map.current))}</b> อยู่ — หุ่นอาจปฏิเสธคำสั่งหรือต้องข้ามชั้นผ่านลิฟต์ ต้องการลองส่งคำสั่งต่อไหม?</p>`, "ลองส่งคำสั่ง");
+      if (!ok) return;
+    }
+    const r = await guardedRun(EP["goto-id"], { id });
+    if (r && r.ok) toast(`🚀 ส่งคำสั่งไป${p ? " “" + esc(p.pointName) + "”" : "ยังจุด"}แล้ว`, "ok");
+  }
+  $("#pointsList").onclick = (e) => { const g = e.target.closest("[data-goto]"); if (g) gotoPoint(g.dataset.goto); };
   function fillPointSelect(sel) {
     const cur = sel.value;
     sel.innerHTML = `<option value="">— เลือกจุด (${state.points.length}) —</option>` +
@@ -600,7 +707,11 @@
         <div class="path"><span class="m ${ep.method}">${ep.method}</span><code>${esc(ep.path)}</code>
           <button class="btn xs ghost" type="button" data-copy="${esc(S.BASE_URL + ep.path)}" title="คัดลอก URL">${svg("copy")}</button></div>
       </div>
-      <div class="ep-toggle">${svg("chev", 'width="20" height="20"')}</div>
+      <div class="ep-ctl">
+        <span class="head-status" data-hs></span>
+        <button class="btn primary head-run" type="button" data-run="${ep.id}"></button>
+        <button class="btn ep-expand" type="button" data-expand aria-expanded="false" title="เปิด/ปิดรายละเอียด พารามิเตอร์ และผลลัพธ์"><span class="lbl">รายละเอียด</span>${svg("chev")}</button>
+      </div>
     </div>`;
   }
   function fieldHtml(ep, p) {
@@ -671,10 +782,26 @@
   }
   function updateRunBtn(btn) {
     const ep = EP[btn.dataset.run];
-    if (ep.disabled) { btn.disabled = true; btn.innerHTML = `${svg("x")}เรียกไม่ได้`; return; }
+    const head = btn.classList.contains("head-run");
+    if (ep.disabled) { btn.disabled = true; btn.innerHTML = `${svg("x")}${head ? "ปิดใช้งาน" : "เรียกไม่ได้"}`; return; }
+    if (btn.dataset.busy) return;
     const locked = ep.risk === "motion" && !state.armed;
     btn.classList.toggle("motion-locked", locked);
-    btn.innerHTML = locked ? `${svg("lock")}ARM แล้วลอง` : ep.stream ? `${svg("radio")}ฟังสตรีม 15 วิ` : `${svg("play")}ลองเลย`;
+    btn.title = locked ? "คำสั่งนี้ทำให้หุ่นเคลื่อนที่ — กดเพื่อเปิด ARM" : `เรียก #${ep.no} ${ep.th}`;
+    btn.innerHTML = locked ? `${svg("lock")}${head ? "ARM" : "ARM แล้วลอง"}` : ep.stream ? `${svg("radio")}${head ? "ฟังสด" : "ฟังสตรีม 15 วิ"}` : `${svg("play")}ลองเลย`;
+  }
+  function setExpanded(art, open) {
+    art.classList.toggle("open", open);
+    const b = art.querySelector("[data-expand]");
+    if (b) { b.setAttribute("aria-expanded", open); b.querySelector(".lbl").textContent = open ? "ซ่อน" : "รายละเอียด"; }
+  }
+  function setHeadStatus(ep, r) {
+    const el = $(`#ep-${ep.id} [data-hs]`); if (!el) return;
+    if (!r) { el.textContent = ""; el.className = "head-status"; return; }
+    const c = r.json && r.json.code;
+    el.className = "head-status " + (r.ok ? "ok" : "bad");
+    el.textContent = r.ok ? `✔ ${r.ms}ms` : `✖ ${c ?? (r.status || "ERR")}`;
+    el.title = humanCode(r);
   }
 
   function renderExplorer() {
@@ -693,6 +820,7 @@
       </div>`);
     });
     $("#sideList").innerHTML = side.join("");
+    setTimeout(() => $$(".head-run").forEach(updateRunBtn));
     $("#catList").innerHTML = cats.join("");
     $("#mobileCats").innerHTML = mob.join("");
     $("#errTable").innerHTML = S.ERRORS.map((e) => `<tr><td>${e.code}</td><td>${esc(e.th)}<br/><span style="color:var(--dim);font-size:12.5px">${esc(e.en)}</span></td></tr>`).join("") +
@@ -703,12 +831,12 @@
     const art = $(`#ep-${id}`); if (!art) return;
     if (!art.querySelector(".ep-body")) {
       art.insertAdjacentHTML("beforeend", epBody(EP[id]));
-      updateRunBtn(art.querySelector("[data-run]"));
+      updateRunBtn(art.querySelector(".ep-body [data-run]"));
       art.querySelectorAll("select[data-picker=point]").forEach(fillPointSelect);
       if (state.dict.length) art.querySelectorAll("select[data-picker=dict]").forEach(fillDictSelect);
       if (state.last[id]) renderResult(EP[id], state.last[id]);
     }
-    art.classList.add("open");
+    setExpanded(art, true);
     if (scroll) {
       art.scrollIntoView({ behavior: "smooth", block: "start" });
       art.classList.remove("flash"); void art.offsetWidth; art.classList.add("flash");
@@ -728,8 +856,10 @@
     const ep = EP[art.dataset.id];
     const cp = e.target.closest("[data-copy]");
     if (cp) { copy(cp.dataset.copy, cp.closest(".path") ? "คัดลอก URL แล้ว" : "คัดลอกแล้ว"); return; }
-    if (e.target.closest("[data-toggle]")) {
-      if (art.classList.contains("open")) art.classList.remove("open"); else openEp(ep.id);
+    const rb = e.target.closest("[data-run]");
+    if (rb) { runFromCard(ep, art, rb); return; }
+    if (e.target.closest("[data-expand]") || e.target.closest("[data-toggle]")) {
+      if (art.classList.contains("open")) setExpanded(art, false); else openEp(ep.id);
       return;
     }
     const tab = e.target.closest("[data-tab]");
@@ -742,20 +872,36 @@
     if (e.target.closest("[data-loaddict]")) { if (!needCfg()) loadDict(); return; }
     const ex = e.target.closest("[data-export]");
     if (ex) { openCode({ ep, values: collectValues(ep, art) }, ex.dataset.export); return; }
-    const rb = e.target.closest("[data-run]");
-    if (rb) {
-      const values = collectValues(ep, art);
-      if (ep.stream) { runStream(ep, art, rb); return; }
-      rb.disabled = true; const old = rb.innerHTML; rb.innerHTML = "กำลังเรียก…";
-      const r = await guardedRun(ep, values);
-      rb.disabled = false; rb.innerHTML = old; updateRunBtn(rb);
-      if (r) {
-        state.last[ep.id] = r; renderResult(ep, r);
-        if (ep.id === "points" && r.ok) { state.points = []; (r.json.data || []).forEach((g) => (g.pointList || []).forEach((p) => state.points.push({ ...p, flagName: g.pointFlagName }))); renderPointChips(); $$("select[data-picker=point]").forEach(fillPointSelect); }
-        if (ep.id === "point-dict" && r.ok) { state.dict = r.json.data || []; $$("select[data-picker=dict]").forEach(fillDictSelect); }
-      }
-    }
   });
+
+  /* run from the card header (collapsed) or from the body — same flow */
+  async function runFromCard(ep, art, btn) {
+    if (ep.disabled) { toast(ep.disabled, "bad"); return; }
+    const hasBody = !!art.querySelector(".ep-body");
+    const values = hasBody ? collectValues(ep, art) : { ...(state.values[ep.id] || {}) };
+    // required field without a default → open the card and focus it instead of failing
+    const missing = (ep.params || []).filter((p) => p.required && !p.auto && p.default === undefined && (values[p.name] === undefined || values[p.name] === ""));
+    if (missing.length) {
+      openEp(ep.id);
+      const f = art.querySelector(`[data-p="${missing[0].name}"]`);
+      if (f) { f.focus(); f.scrollIntoView({ block: "center", behavior: "smooth" }); }
+      toast(`กรอก ${missing.map((p) => "<code>" + esc(p.name) + "</code>").join(", ")} ก่อน แล้วกด ▶ ลองเลย อีกครั้ง`, "bad");
+      return;
+    }
+    if (ep.stream) { openEp(ep.id); runStream(ep, art, art.querySelector(".ep-body [data-run]")); return; }
+    const btns = $$(`[data-run="${ep.id}"]`, art);
+    btns.forEach((b) => { b.disabled = true; b.dataset.busy = "1"; b.innerHTML = `${svg("radio")}กำลังเรียก…`; });
+    const r = await guardedRun(ep, values);
+    btns.forEach((b) => { b.disabled = false; delete b.dataset.busy; updateRunBtn(b); });
+    if (!r) return;
+    state.last[ep.id] = r;
+    openEp(ep.id);            // show the result right away
+    renderResult(ep, r);
+    setHeadStatus(ep, r);
+    if (ep.id === "points" && r.ok) setPoints(r.json.data);
+    if (ep.id === "point-dict" && r.ok) { state.dict = r.json.data || []; $$("select[data-picker=dict]").forEach(fillDictSelect); }
+    if (ep.id === "maps" && r.ok && map.current) { loadMap(); }
+  }
   $("#catList").addEventListener("change", (e) => {
     const sel = e.target.closest("select[data-picker=point]");
     if (sel && sel.value) $("#" + sel.dataset.for).value = sel.value;
@@ -922,6 +1068,25 @@
       <div style="font-size:12px;color:var(--dim);margin-bottom:4px">Alpha-Sign = sha1(…)</div>
       <div class="mono-box"><span class="h">${req.sign}</span></div>`;
   }
+
+  /* ---------------------------------------------------------------- theme (dark / light) */
+  function setTheme(t, save = true) {
+    document.documentElement.setAttribute("data-theme", t);
+    if (save) { try { localStorage.setItem("tesr.theme", t); } catch (e) {} }
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = t === "light" ? "#fbf7f7" : "#120609";
+    $$("#themeSeg [data-theme-set]").forEach((b) => b.classList.toggle("on", b.dataset.themeSet === t));
+    $("#themeBtn").title = t === "light" ? "เปลี่ยนเป็นธีมมืด" : "เปลี่ยนเป็นธีมสว่าง";
+    draw();
+  }
+  $("#themeBtn").onclick = () => setTheme(isLight() ? "dark" : "light");
+  $("#themeSeg").addEventListener("click", (e) => { const b = e.target.closest("[data-theme-set]"); if (b) { e.stopPropagation(); setTheme(b.dataset.themeSet); } });
+  // follow the OS setting until the user picks one
+  try {
+    const mq = matchMedia("(prefers-color-scheme: light)");
+    mq.addEventListener("change", (e) => { let saved = null; try { saved = localStorage.getItem("tesr.theme"); } catch (x) {} if (!saved) setTheme(e.matches ? "light" : "dark", false); });
+  } catch (e) {}
+  setTheme(isLight() ? "light" : "dark", false);
 
   /* ---------------------------------------------------------------- mobile menu */
   const menuBtn = $("#menuBtn"), mnav = $("#mnav");
