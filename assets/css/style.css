@@ -671,8 +671,8 @@ footer.site .grow { flex: 1; }
 .map-card:hover { border-color: var(--gold); }
 .map-card:focus-visible { outline: 2px solid var(--red-2); outline-offset: 2px; }
 .map-card.on { border-color: var(--red-2); box-shadow: 0 0 0 3px rgba(227,50,74,.18); }
-.map-card .thumb { height: 82px; background: var(--map-bg); display: grid; place-items: center; position: relative; }
-.map-card .thumb img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+.map-card .thumb { height: 82px; background: var(--map-bg); display: grid; place-items: center; position: relative; overflow: hidden; }
+.map-card .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: contain; padding: 6px; box-sizing: border-box; }
 :root:not([data-theme="light"]) .map-card .thumb img { filter: invert(1) hue-rotate(180deg) brightness(.9); }
 .map-card .thumb em { font-style: normal; font-size: 11.5px; color: var(--dim); position: absolute; }
 .map-card .meta { padding: 8px 10px 9px; }
