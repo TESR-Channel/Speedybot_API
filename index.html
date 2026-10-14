@@ -22,7 +22,7 @@
   <div class="wrap">
     <a class="brand" href="#top" aria-label="TESR Speedybot API Lab">
       <img src="assets/img/tesr-logo.png" alt="TESR logo" />
-      <div><b>TESR <i>·</i> SPEEDYBOT</b><small>API Lab · Thai Embedded System and Robotics</small></div>
+      <div><b>TESR <i>·</i> <span class="bn">SPEEDYBOT</span></b><small>API Lab · Thai Embedded System and Robotics</small></div>
     </a>
     <nav class="topnav">
       <a href="#about">หุ่นยนต์</a>
@@ -39,8 +39,19 @@
       <button class="btn icon" id="cfgBtn" type="button" title="ตั้งค่า API key" aria-label="ตั้งค่า">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
+      <button class="btn icon menu-btn" id="menuBtn" type="button" aria-label="เมนู" aria-expanded="false" aria-controls="mnav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
     </div>
   </div>
+  <nav class="mnav" id="mnav" aria-label="เมนูหลัก">
+    <a href="#about"><span>01</span>รู้จัก Speedybot</a>
+    <a href="#dashboard"><span>02</span>แดชบอร์ดสด</a>
+    <a href="#sign"><span>03</span>วิธีเซ็น Alpha-Sign</a>
+    <a href="#explorer"><span>04</span>API ทั้งหมด (34)</a>
+    <a href="#sdk"><span>05</span>SDK &amp; ข้อมูลอ้างอิง</a>
+    <button class="btn primary" type="button" data-open-cfg>ตั้งค่า API Key</button>
+  </nav>
 </header>
 
 <main id="top">
@@ -165,7 +176,8 @@
         <div class="points-list" id="pointsList"></div>
       </div>
 
-      <div class="card card-pad cut">
+      <div class="card card-pad cut ctrl-card">
+        <div class="ctrl-pad">
         <div class="dash-head"><h3>บังคับด้วยมือ</h3><span class="badge motion" id="padBadge">ต้อง ARM</span></div>
         <div class="pad locked" id="pad">
           <span></span>
@@ -178,15 +190,16 @@
           <button type="button" data-move="backward" aria-label="ถอยหลัง"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
           <span></span>
         </div>
-        <p class="pad-note">กดค้างเพื่อขยับต่อเนื่อง · ปล่อยมือ = หยุด · คีย์บอร์ด ↑ ↓ ← → / Space</p>
-
-        <div class="divider"></div>
-        <div class="dash-head"><h3>คำสั่งด่วน</h3></div>
-        <div class="quick" id="quick"></div>
-
-        <div class="divider"></div>
-        <div class="dash-head"><h3>บันทึกการเรียก API</h3><button class="btn xs ghost" id="clearLog" type="button">ล้าง</button></div>
-        <div class="log" id="log"><div><time>--:--:--</time><span>ยังไม่มีการเรียก API</span></div></div>
+        <p class="pad-note">กดค้างเพื่อขยับต่อเนื่อง · ปล่อยมือ = หยุด<span class="kbd-hint"> · คีย์บอร์ด ↑ ↓ ← → / Space</span></p>
+        </div>
+        <div class="ctrl-quick">
+          <div class="dash-head"><h3>คำสั่งด่วน</h3></div>
+          <div class="quick" id="quick"></div>
+        </div>
+        <div class="ctrl-log">
+          <div class="dash-head"><h3>บันทึกการเรียก API</h3><button class="btn xs ghost" id="clearLog" type="button">ล้าง</button></div>
+          <div class="log" id="log"><div><time>--:--:--</time><span>ยังไม่มีการเรียก API</span></div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -231,7 +244,10 @@
       <h2><small>API Explorer</small>API ทั้งหมด</h2>
       <p>คลิกที่หัวข้อเพื่อเปิด → แก้ค่าพารามิเตอร์ → <b>▶ ลองเลย</b> · ปุ่ม <b>JS</b> / <b>Python</b> สร้างโค้ดพร้อมรันจากค่าที่กรอกไว้</p>
     </div>
-    <div class="mobile-cats" id="mobileCats"></div>
+    <div class="xbar" id="xbar">
+      <input type="search" id="msearch" placeholder="ค้นหา API… (ไทย/อังกฤษ/path/#เลข)" aria-label="ค้นหา API" />
+      <div class="mobile-cats" id="mobileCats"></div>
+    </div>
     <div class="explorer">
       <aside class="card side" id="side">
         <input type="search" id="search" placeholder="ค้นหา API… (ไทย/อังกฤษ/path)" aria-label="ค้นหา API" />
@@ -272,7 +288,7 @@
       </div>
     </div>
 
-    <div class="sdk-grid" style="margin-top:18px;grid-template-columns:1fr 1fr">
+    <div class="sdk-grid two">
       <div class="card card-pad">
         <h3 style="font-size:19px;margin-bottom:10px">รหัสผลลัพธ์ (code)</h3>
         <table class="err-table"><tbody id="errTable"></tbody></table>

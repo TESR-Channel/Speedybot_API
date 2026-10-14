@@ -659,15 +659,15 @@
         rows.push([path, o === null ? "null" : typeof o === "object" ? "{…}" : String(o), doc[path] || ""]);
       };
       walk(json.data, "data", 0);
-      return `<table class="fields"><tbody>${rows.map(([k, v, d]) => `<tr><td>${esc(k)}</td><td>${esc(v.length > 60 ? v.slice(0, 60) + "…" : v)}</td><td>${esc(d || "—")}</td></tr>`).join("")}</tbody></table>
+      return `<div class="table-scroll"><table class="fields"><tbody>${rows.map(([k, v, d]) => `<tr><td>${esc(k)}</td><td>${esc(v.length > 60 ? v.slice(0, 60) + "…" : v)}</td><td>${esc(d || "—")}</td></tr>`).join("")}</tbody></table></div>
         <p class="help" style="font-size:12px;color:var(--dim);margin:10px 0 0">แสดงค่าจริงจากผลลัพธ์ล่าสุด (array แสดงเฉพาะตัวแรก)</p>`;
     }
     const ent = Object.entries(doc);
     if (!ent.length) return '<div class="placeholder">ไม่มีข้อมูลฟิลด์</div>';
-    return `<table class="fields"><tbody>
+    return `<div class="table-scroll"><table class="fields"><tbody>
       <tr><td>code</td><td>int</td><td>200 = สำเร็จ · ดูตารางรหัสด้านล่าง</td></tr>
       <tr><td>msg</td><td>string</td><td>ข้อความแจ้งเตือน/ข้อผิดพลาด</td></tr>
-      ${ent.map(([k, d]) => `<tr><td>${esc(k)}</td><td></td><td>${esc(d)}</td></tr>`).join("")}</tbody></table>`;
+      ${ent.map(([k, d]) => `<tr><td>${esc(k)}</td><td></td><td>${esc(d)}</td></tr>`).join("")}</tbody></table></div>`;
   }
   function updateRunBtn(btn) {
     const ep = EP[btn.dataset.run];
@@ -764,14 +764,20 @@
     const a = e.target.closest("a[data-ep]"); if (!a) return;
     e.preventDefault(); openEp(a.dataset.ep, true);
   });
-  $("#search").addEventListener("input", (e) => {
-    const q = e.target.value.trim().toLowerCase();
+  function filterEndpoints(raw) {
+    const q = raw.trim().toLowerCase();
     S.ENDPOINTS.forEach((ep) => {
       const hit = !q || [ep.th, ep.en, ep.zh, ep.path, "#" + ep.no, ep.method, ep.desc].join(" ").toLowerCase().includes(q);
       $(`#ep-${ep.id}`).style.display = hit ? "" : "none";
       $(`#sideList a[data-ep="${ep.id}"]`).style.display = hit ? "" : "none";
     });
-  });
+    $$(".cat").forEach((c) => { c.style.display = [...c.querySelectorAll(".ep")].some((a) => a.style.display !== "none") ? "" : "none"; });
+  }
+  ["#search", "#msearch"].forEach((sel) => $(sel).addEventListener("input", (e) => {
+    const other = sel === "#search" ? "#msearch" : "#search";
+    $(other).value = e.target.value;
+    filterEndpoints(e.target.value);
+  }));
 
   async function runStream(ep, art, btn) {
     if (needCfg()) return;
@@ -915,6 +921,28 @@
       <div class="mono-box" style="margin-bottom:12px">${colored}</div>
       <div style="font-size:12px;color:var(--dim);margin-bottom:4px">Alpha-Sign = sha1(…)</div>
       <div class="mono-box"><span class="h">${req.sign}</span></div>`;
+  }
+
+  /* ---------------------------------------------------------------- mobile menu */
+  const menuBtn = $("#menuBtn"), mnav = $("#mnav");
+  const setMenu = (on) => { mnav.classList.toggle("on", on); menuBtn.setAttribute("aria-expanded", on); };
+  menuBtn.onclick = (e) => { e.stopPropagation(); setMenu(!mnav.classList.contains("on")); };
+  mnav.addEventListener("click", (e) => { if (e.target.closest("a,button")) setMenu(false); });
+  document.addEventListener("click", (e) => { if (mnav.classList.contains("on") && !e.target.closest("#mnav")) setMenu(false); });
+  window.addEventListener("resize", () => { if (innerWidth >= 1100) setMenu(false); });
+  $$("[data-open-cfg]").forEach((b) => (b.onclick = openCfg));
+
+  /* highlight the category chip of the section in view (phone/tablet bar) */
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((ents) => ents.forEach((en) => {
+      if (!en.isIntersecting) return;
+      $$("#mobileCats a").forEach((a) => {
+        const on = a.getAttribute("href") === "#" + en.target.id;
+        a.classList.toggle("on", on);
+        if (on) { const bar = $("#mobileCats"); bar.scrollTo({ left: a.offsetLeft - bar.clientWidth / 2 + a.offsetWidth / 2, behavior: "smooth" }); }
+      });
+    }), { rootMargin: "-140px 0px -60% 0px" });
+    $$(".cat").forEach((c) => io.observe(c));
   }
 
   /* ---------------------------------------------------------------- init */
