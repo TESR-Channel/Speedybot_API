@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Speedybot API Lab · TESR</title>
+  <meta name="description" content="TESR Speedybot API Lab — คู่มือ API หุ่นยนต์ส่งของ Speedybot แบบอ่านง่าย กดทดสอบได้จริง พร้อม export โค้ด JavaScript / Python" />
+  <meta name="theme-color" content="#120609" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+  <meta property="og:title" content="Speedybot API Lab · TESR" />
+  <meta property="og:image" content="assets/img/tesr-bg.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<!-- ============================== TOP BAR ============================== -->
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="TESR Speedybot API Lab">
+      <img src="assets/img/tesr-logo.png" alt="TESR logo" />
+      <div><b>TESR <i>·</i> SPEEDYBOT</b><small>API Lab · Thai Embedded System and Robotics</small></div>
+    </a>
+    <nav class="topnav">
+      <a href="#about">หุ่นยนต์</a>
+      <a href="#dashboard">แดชบอร์ด</a>
+      <a href="#sign">วิธีเซ็น</a>
+      <a href="#explorer">API ทั้งหมด</a>
+      <a href="#sdk">SDK</a>
+    </nav>
+    <div class="top-right">
+      <span class="pill status-pill" id="statusPill" title="สถานะหุ่นยนต์"><i class="dot" id="statusDot"></i><span class="txt" id="statusTxt">ยังไม่ได้ตั้งค่า</span></span>
+      <button class="arm" id="armBtn" type="button" aria-pressed="false" title="เปิดเพื่ออนุญาตคำสั่งที่ทำให้หุ่นเคลื่อนที่">
+        <span class="lbl">ARM</span><span class="sw"></span>
+      </button>
+      <button class="btn icon" id="cfgBtn" type="button" title="ตั้งค่า API key" aria-label="ตั้งค่า">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+<!-- ============================== HERO ============================== -->
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">TESR Robotics · Open API v5</span>
+      <h1>Speedybot <span class="accent">API Lab</span><small>คู่มือ API หุ่นยนต์ส่งของ อ่านง่าย · กดทดสอบได้ทันที · Export โค้ดได้</small></h1>
+      <p class="lead">หุ่นยนต์ส่งของ <b>Speedybot</b> วิ่งได้ทั้งในอาคารและนอกอาคาร ควบคุมผ่าน Cloud API ของผู้ผลิต — หน้านี้รวมทุกคำสั่งไว้ที่เดียว อธิบายเป็นภาษาไทย มีปุ่มให้ลองยิงจริง ดูผลลัพธ์พร้อมคำแปล และกดเอาโค้ด <b>JavaScript / Python</b> ไปใช้ต่อได้เลย</p>
+      <div class="hero-actions">
+        <button class="btn primary" id="heroCfg" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          ใส่ API Key
+        </button>
+        <button class="btn gold" id="heroTest" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          ทดสอบการเชื่อมต่อ
+        </button>
+        <a class="btn ghost" href="#explorer">ดู API ทั้งหมด (34)</a>
+      </div>
+      <div class="steps">
+        <div class="step"><b>01</b><span>ใส่ Robot SN, App ID, App Key, App Secret (เก็บในเครื่องคุณเท่านั้น)</span></div>
+        <div class="step"><b>02</b><span>เลือก API → กด <b>▶ ลองเลย</b> ดูผลลัพธ์พร้อมคำอธิบายทุกช่อง</span></div>
+        <div class="step"><b>03</b><span>กด <b>JS</b> หรือ <b>Python</b> เพื่อเอาโค้ดที่เซ็นพร้อมใช้ไปรันต่อ</span></div>
+      </div>
+    </div>
+
+    <div class="robot-fig">
+      <div class="frame" id="heroFrame">
+        <img src="assets/img/speedybot.jpg" alt="หุ่นยนต์ส่งของ Speedybot" width="510" height="416" />
+      </div>
+      <span class="tag">SPEEDYBOT PRO</span>
+      <div class="legend" id="heroLegend"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== ABOUT ============================== -->
+<section class="block" id="about">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>What is it</small>รู้จัก Speedybot</h2>
+      <p>หุ่นยนต์ส่งของอัตโนมัติ (L4) ใช้ LiDAR 3D หลายเลเยอร์ + เซนเซอร์ฟิวชัน วิ่งได้ทั้งในตึกและบนถนนภายในพื้นที่ เชื่อมกับประตู/ลิฟต์ผ่าน IoT module</p>
+    </div>
+    <div class="about-grid">
+      <div class="card card-pad cut">
+        <div class="lidar-card">
+          <img src="assets/img/speedybot-lidar.jpg" alt="Speedybot พร้อม LiDAR" />
+          <div>
+            <h3 style="font-size:20px;margin-bottom:6px">Multi-Line 3D LiDAR</h3>
+            <p style="margin:0;color:var(--muted);font-size:14px">ระบุตำแหน่งระดับเซนติเมตร หลบสิ่งกีดขวางระดับมิลลิวินาที และวางแผนเส้นทางได้ระยะหลายกิโลเมตร — ทุกแผนที่และจุดหมายที่หุ่นสร้างไว้ เรียกดูได้ผ่าน API หมวด <a href="#cat-map">แผนที่ &amp; จุดหมาย</a></p>
+          </div>
+        </div>
+        <div class="scenes">
+          <div class="scene"><img src="assets/img/scene-community.jpg" alt="ใช้งานในคอนโด/ชุมชน" loading="lazy" /><span>ชุมชน / คอนโด</span></div>
+          <div class="scene"><img src="assets/img/scene-mall.jpg" alt="ใช้งานในห้าง" loading="lazy" /><span>ห้าง / แคมปัส</span></div>
+          <div class="scene"><img src="assets/img/scene-factory.jpg" alt="ใช้งานในโรงงาน" loading="lazy" /><span>โรงงาน</span></div>
+        </div>
+      </div>
+      <div class="specs" aria-label="สเปก Speedybot Pro">
+        <div class="spec"><span>ขนาด (ย×ก×ส)</span><b>700×560×715<small>mm</small></b></div>
+        <div class="spec"><span>น้ำหนักตัว</span><b>~65<small>kg</small></b></div>
+        <div class="spec"><span>บรรทุกได้</span><b>100<small>kg</small></b></div>
+        <div class="spec"><span>ช่องเก็บของ</span><b>80<small>ลิตร</small></b></div>
+        <div class="spec"><span>ความเร็วสูงสุด</span><b>7.2<small>km/h</small></b></div>
+        <div class="spec"><span>ระยะวิ่ง</span><b>40<small>km</small></b></div>
+        <div class="spec"><span>แบตเตอรี่</span><b>48V 20<small>Ah</small></b></div>
+        <div class="spec"><span>ใช้งานต่อเนื่อง</span><b>8<small>ชม.</small></b></div>
+        <div class="spec"><span>ชาร์จเต็ม</span><b>2–3<small>ชม.</small></b></div>
+        <div class="spec"><span>LiDAR</span><b>60<small>m</small></b></div>
+        <div class="spec"><span>พื้นที่ใช้งาน</span><b style="font-size:17px">ถนนภายใน</b></div>
+        <div class="spec"><span>API Host</span><b style="font-size:14px;font-family:var(--f-mono)">alpha-pro.csjbot.com</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DASHBOARD ============================== -->
+<section class="block" id="dashboard">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>Live control</small>แดชบอร์ดสด</h2>
+      <p>ดูสถานะ แผนที่ และตำแหน่งหุ่นแบบเรียลไทม์ — คำสั่งที่ทำให้หุ่นเคลื่อนที่ต้องเปิด <b style="color:var(--red-2)">ARM</b> ที่มุมขวาบนก่อน และกด <b>STOP</b> สีแดงได้ตลอดเวลา</p>
+    </div>
+    <div class="dash">
+      <div class="card card-pad cut">
+        <div class="dash-head">
+          <h3><i class="dot" id="liveDot"></i>สถานะหุ่นยนต์</h3>
+          <label class="switch"><input type="checkbox" id="autoRefresh" /> รีเฟรชอัตโนมัติ 5 วิ</label>
+          <button class="btn sm" id="refreshBtn" type="button">รีเฟรช</button>
+        </div>
+        <div class="tiles" id="tiles">
+          <div class="tile"><span>แบตเตอรี่</span><b id="t-batt">—</b><div class="battery"><i id="t-batt-bar"></i></div></div>
+          <div class="tile"><span>สถานะ</span><b id="t-state">—</b></div>
+          <div class="tile"><span>อยู่ที่จุด</span><b id="t-point">—</b></div>
+          <div class="tile"><span>ระยะวิ่งเหลือ</span><b id="t-range">—</b></div>
+          <div class="tile"><span>ความเร็ว</span><b id="t-speed">—</b></div>
+          <div class="tile"><span>ชาร์จ</span><b id="t-charge">—</b></div>
+          <div class="tile"><span>ล้อ</span><b id="t-hub">—</b></div>
+          <div class="tile"><span>Ping</span><b id="t-ping">—</b></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="dash-head">
+          <h3>แผนที่ &amp; ตำแหน่งสด</h3>
+          <button class="btn sm" id="loadMapBtn" type="button">โหลดแผนที่</button>
+          <label class="switch"><input type="checkbox" id="sseToggle" /> ตำแหน่งสด (SSE)</label>
+        </div>
+        <div class="map-box" id="mapBox">
+          <canvas id="mapCanvas"></canvas>
+          <div class="map-empty" id="mapEmpty">กด “โหลดแผนที่” เพื่อดึงแผนที่ปัจจุบันของหุ่น (API #27)<br/>แล้วเปิด “ตำแหน่งสด” เพื่อเห็นหุ่นเคลื่อนที่บนแผนที่ (API #28)</div>
+          <div class="map-tools">
+            <button class="btn" id="zoomIn" type="button" title="ซูมเข้า">+</button>
+            <button class="btn" id="zoomOut" type="button" title="ซูมออก">−</button>
+            <button class="btn" id="zoomFit" type="button" title="พอดีกรอบ">⤢</button>
+          </div>
+          <div class="map-info" id="mapInfo" hidden></div>
+        </div>
+        <div class="points-list" id="pointsList"></div>
+      </div>
+
+      <div class="card card-pad cut">
+        <div class="dash-head"><h3>บังคับด้วยมือ</h3><span class="badge motion" id="padBadge">ต้อง ARM</span></div>
+        <div class="pad locked" id="pad">
+          <span></span>
+          <button type="button" data-move="forward" aria-label="เดินหน้า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          <span></span>
+          <button type="button" data-move="left" aria-label="เลี้ยวซ้าย"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+          <button type="button" class="stop-btn" data-move="stop" aria-label="หยุด">STOP</button>
+          <button type="button" data-move="right" aria-label="เลี้ยวขวา"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+          <span></span>
+          <button type="button" data-move="backward" aria-label="ถอยหลัง"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
+          <span></span>
+        </div>
+        <p class="pad-note">กดค้างเพื่อขยับต่อเนื่อง · ปล่อยมือ = หยุด · คีย์บอร์ด ↑ ↓ ← → / Space</p>
+
+        <div class="divider"></div>
+        <div class="dash-head"><h3>คำสั่งด่วน</h3></div>
+        <div class="quick" id="quick"></div>
+
+        <div class="divider"></div>
+        <div class="dash-head"><h3>บันทึกการเรียก API</h3><button class="btn xs ghost" id="clearLog" type="button">ล้าง</button></div>
+        <div class="log" id="log"><div><time>--:--:--</time><span>ยังไม่มีการเรียก API</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== SIGN ============================== -->
+<section class="block" id="sign">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>Authentication</small>วิธีเซ็น Alpha-Sign</h2>
+      <p>ทุก request ต้องแนบ header 7 ตัว โดย <code>Alpha-Sign</code> คือ SHA-1 ของ <b>appSecret</b> ต่อกับข้อมูลของ request — appSecret จึงไม่ถูกส่งออกไปเลย ใช้แค่คำนวณลายเซ็น</p>
+    </div>
+    <div class="sign-grid">
+      <div class="card card-pad">
+        <ol class="flow" style="margin:0;padding:0">
+          <li><b>สุ่ม Nonce + เอาเวลาปัจจุบัน (วินาที)</b><p>Nonce = ตัวอักษรสุ่ม 10 ตัว, Timestamp = Unix time หน่วย<em>วินาที</em> (เวลาเครื่องต้องตรง)</p></li>
+          <li><b>สร้าง fixed string</b><p><code>alphaAppId={id}&amp;alphaAppKey={key}&amp;alphaNonce={nonce}&amp;timestamp={ts}</code></p></li>
+          <li><b>GET → เรียง query ตามชื่อ</b><p><code>k1=v1&amp;k2=v2</code> แล้วต่อ: <code>appSecret + query + fixed</code> (ไม่มี &amp; คั่น)</p></li>
+          <li><b>POST / PUT → JSON แบบไม่มีช่องว่าง</b><p><code>appSecret + fixed + JSON.stringify(body)</code> · ถ้าไม่มี body ให้ส่ง <code>{}</code></p></li>
+          <li><b>SHA-1 → hex ตัวพิมพ์เล็ก</b><p>ได้ 40 ตัวอักษร ใส่ header <code>Alpha-Sign</code> พร้อม Alpha-Robot-Sn, App-Id, App-Key, Nonce, Timestamp, Alpha-language</p></li>
+        </ol>
+      </div>
+      <div class="card card-pad cut">
+        <div class="dash-head">
+          <h3>ลองดูของจริง</h3>
+          <div class="seg" id="signSeg">
+            <button type="button" class="on" data-k="get">GET + query</button>
+            <button type="button" data-k="post">POST body</button>
+          </div>
+          <button class="btn sm" id="signRegen" type="button">สุ่มใหม่</button>
+        </div>
+        <div id="signDemo"><div class="placeholder">ใส่ API Key ก่อน แล้วระบบจะคำนวณลายเซ็นให้ดูทีละขั้น<br/>(appSecret จะแสดงเป็น ‹appSecret› เสมอ)</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== EXPLORER ============================== -->
+<section class="block" id="explorer">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>API Explorer</small>API ทั้งหมด</h2>
+      <p>คลิกที่หัวข้อเพื่อเปิด → แก้ค่าพารามิเตอร์ → <b>▶ ลองเลย</b> · ปุ่ม <b>JS</b> / <b>Python</b> สร้างโค้ดพร้อมรันจากค่าที่กรอกไว้</p>
+    </div>
+    <div class="mobile-cats" id="mobileCats"></div>
+    <div class="explorer">
+      <aside class="card side" id="side">
+        <input type="search" id="search" placeholder="ค้นหา API… (ไทย/อังกฤษ/path)" aria-label="ค้นหา API" />
+        <div id="sideList"></div>
+      </aside>
+      <div id="catList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== SDK & REFERENCE ============================== -->
+<section class="block" id="sdk">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>SDK &amp; Reference</small>ดาวน์โหลด SDK &amp; ข้อมูลอ้างอิง</h2>
+      <p>SDK ไฟล์เดียว ครบทุก endpoint มีระบบเซ็นในตัว — โหลดไปใช้กับ Node-RED, Raspberry Pi, ROS 2 node หรือ backend ได้ทันที</p>
+    </div>
+    <div class="sdk-grid">
+      <div class="card card-pad cut sdk-card">
+        <h3><span class="m GET" style="background:#f7df1e;color:#222">JS</span> JavaScript SDK</h3>
+        <p>Node.js 18+ ไม่ต้องติดตั้ง package เพิ่ม · <code>class Speedybot</code> มีเมธอดครบ 33 ตัว เช่น <code>bot.homepage()</code>, <code>bot.gotoId({ id })</code></p>
+        <div class="actions"><button class="btn primary sm" data-sdk="js" type="button">ดู &amp; ดาวน์โหลด speedybot.js</button></div>
+      </div>
+      <div class="card card-pad cut sdk-card">
+        <h3><span class="m GET" style="background:#3776ab;color:#fff">PY</span> Python SDK</h3>
+        <p>Python 3.10+ ใช้ <code>requests</code> · เหมาะกับ Raspberry Pi / ROS 2 · <code>bot.homepage()</code>, <code>bot.goto_id(123)</code>, <code>bot.neon_on()</code></p>
+        <div class="actions"><button class="btn primary sm" data-sdk="py" type="button">ดู &amp; ดาวน์โหลด speedybot.py</button></div>
+      </div>
+      <div class="card card-pad sdk-card">
+        <h3>ภาษาของข้อความตอบกลับ</h3>
+        <p>header <code>Alpha-language</code> เปลี่ยนภาษาของ msg / ชื่อสถานะ</p>
+        <table class="err-table"><tbody>
+          <tr><td>en-US</td><td>English</td></tr>
+          <tr><td>zh-CN</td><td>中文</td></tr>
+          <tr><td>ja-JP</td><td>日本語</td></tr>
+          <tr><td>ru-RU</td><td>Русский</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="sdk-grid" style="margin-top:18px;grid-template-columns:1fr 1fr">
+      <div class="card card-pad">
+        <h3 style="font-size:19px;margin-bottom:10px">รหัสผลลัพธ์ (code)</h3>
+        <table class="err-table"><tbody id="errTable"></tbody></table>
+      </div>
+      <div class="card card-pad cut">
+        <h3 style="font-size:19px;margin-bottom:10px">🔒 ความปลอดภัยของ Key</h3>
+        <ul class="sec-list">
+          <li><b>ไม่มี key อยู่ในโค้ดของเว็บนี้</b> — ทุกคนต้องกรอกของตัวเอง</li>
+          <li><b>appSecret ไม่ถูกส่งออกไปที่ไหนเลย</b> ใช้คำนวณ SHA-1 ในเบราว์เซอร์เท่านั้น</li>
+          <li>ค่าเก็บใน <b>sessionStorage</b> (ปิดแท็บแล้วหาย) หรือ localStorage ถ้าติ๊ก “จำไว้ในเครื่องนี้”</li>
+          <li>เว็บนี้คุยตรงกับ <code>alpha-pro.csjbot.com</code> เท่านั้น ไม่มีเซิร์ฟเวอร์กลาง</li>
+          <li>โค้ดที่ export จะใช้ <b>environment variables</b> เป็นค่าเริ่มต้น — อย่า commit key ขึ้น Git</li>
+          <li>ถ้า key หลุด ให้แจ้งผู้ผลิต (CSJBot) เพื่อออก appSecret ใหม่</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <img src="assets/img/tesr-logo.png" alt="TESR" />
+    <div class="grow">
+      <p><b style="color:#fff;font-family:var(--f-head);letter-spacing:.06em">TESR Co., Ltd.</b> · Thai Embedded System and Robotics</p>
+      <p>Speedybot API Lab — อ้างอิงเอกสาร 飞毛腿室内外配送机器人 开放接口 v5 (2026-08-26) · <a href="https://tesrshop.com" target="_blank" rel="noopener">tesrshop.com</a> · <a href="https://tesracademy.com" target="_blank" rel="noopener">tesracademy.com</a></p>
+    </div>
+    <p>Speedybot เป็นเครื่องหมายของผู้ผลิต · หน้านี้จัดทำโดย TESR เพื่อการพัฒนาและทดสอบ</p>
+  </div>
+</footer>
+
+<!-- E-STOP -->
+<button class="estop" id="estop" type="button" title="หยุดหุ่นทันที (#15 + #34)">STOP<small>ฉุกเฉิน</small></button>
+
+<!-- ============================== MODALS ============================== -->
+<div class="modal-bg" id="cfgModal" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
+  <div class="modal small">
+    <header>
+      <h3 id="cfgTitle"><img src="assets/img/tesr-logo.png" alt="" width="26" />ตั้งค่า API</h3>
+      <button class="btn icon sm ghost" data-close type="button" aria-label="ปิด">✕</button>
+    </header>
+    <div class="body">
+      <div class="lock-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div>ค่าทั้งหมดเก็บในเบราว์เซอร์ของคุณเท่านั้น ไม่ถูกบันทึกลงเว็บหรือ GitHub · <b>appSecret</b> ใช้คำนวณลายเซ็นในเครื่อง ไม่เคยถูกส่งออกไป</div>
+      </div>
+      <details class="paste">
+        <summary>วางข้อความ config ทีเดียว (เช่น <code>Alpha-Robot-Sn: …</code>)</summary>
+        <div class="field"><textarea id="pasteBox" rows="5" placeholder="Alpha-Robot-Sn: 4E00…&#10;Alpha-App-Id: …&#10;Alpha-App-Key: …&#10;appSecret: …"></textarea></div>
+        <button class="btn sm" id="pasteApply" type="button" style="margin-top:8px">แยกค่าอัตโนมัติ</button>
+      </details>
+      <div class="cfg-grid">
+        <div class="field"><label for="c-sn"><code>Alpha-Robot-Sn</code><em>หมายเลขเครื่องของหุ่น</em></label><input id="c-sn" autocomplete="off" spellcheck="false" placeholder="4E00…" /></div>
+        <div class="field"><label for="c-id"><code>Alpha-App-Id</code><em>App ID ที่ได้จากผู้ผลิต</em></label><input id="c-id" autocomplete="off" spellcheck="false" /></div>
+        <div class="field"><label for="c-key"><code>Alpha-App-Key</code><em>App Key</em></label>
+          <div class="secret-row"><input id="c-key" type="password" autocomplete="off" spellcheck="false" /><button class="btn icon sm" type="button" data-reveal="c-key" aria-label="แสดง/ซ่อน">👁</button></div></div>
+        <div class="field"><label for="c-secret"><code>appSecret</code><em>ความลับ — ใช้คำนวณ Alpha-Sign</em></label>
+          <div class="secret-row"><input id="c-secret" type="password" autocomplete="off" spellcheck="false" /><button class="btn icon sm" type="button" data-reveal="c-secret" aria-label="แสดง/ซ่อน">👁</button></div></div>
+        <div class="field"><label for="c-lang"><code>Alpha-language</code><em>ภาษาของข้อความตอบกลับ</em></label><select id="c-lang"></select></div>
+        <label class="switch"><input type="checkbox" id="c-remember" /> จำไว้ในเครื่องนี้ (localStorage) — ไม่ติ๊ก = ลบเมื่อปิดแท็บ</label>
+      </div>
+    </div>
+    <footer>
+      <button class="btn sm danger grow" id="cfgClear" type="button">ล้างค่าทั้งหมด</button>
+      <button class="btn sm" data-close type="button">ยกเลิก</button>
+      <button class="btn primary sm" id="cfgSave" type="button">บันทึก &amp; ทดสอบ</button>
+    </footer>
+  </div>
+</div>
+
+<div class="modal-bg" id="codeModal" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
+  <div class="modal">
+    <header>
+      <h3 id="codeTitle">Export code</h3>
+      <div class="seg" id="codeSeg">
+        <button type="button" data-lang="js" class="on">JavaScript</button>
+        <button type="button" data-lang="py">Python</button>
+      </div>
+      <button class="btn icon sm ghost" data-close type="button" aria-label="ปิด">✕</button>
+    </header>
+    <div class="body"><pre class="code" id="codeOut"></pre></div>
+    <footer>
+      <label class="switch grow"><input type="checkbox" id="withSecrets" /> ใส่ key จริงลงในโค้ด (ห้ามแชร์/commit!)</label>
+      <button class="btn sm" id="codeCopy" type="button">คัดลอก</button>
+      <button class="btn primary sm" id="codeDl" type="button">ดาวน์โหลดไฟล์</button>
+    </footer>
+  </div>
+</div>
+
+<div class="modal-bg" id="askModal" role="alertdialog" aria-modal="true" aria-labelledby="askTitle">
+  <div class="modal small">
+    <header><h3 id="askTitle">ยืนยัน</h3></header>
+    <div class="body" id="askBody"></div>
+    <footer><span class="grow"></span><button class="btn sm" id="askNo" type="button">ยกเลิก</button><button class="btn primary sm" id="askYes" type="button">ยืนยัน</button></footer>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="assets/js/endpoints.js"></script>
+<script src="assets/js/client.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

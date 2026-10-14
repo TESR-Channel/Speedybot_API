@@ -1,0 +1,14 @@
+# never commit Speedybot credentials
+.env
+.env.*
+config.local.*
+*secret*
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/
+__pycache__/
