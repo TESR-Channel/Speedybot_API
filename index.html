@@ -204,7 +204,7 @@
         <p class="pad-note">กดค้างเพื่อขยับต่อเนื่อง · ปล่อยมือ = หยุด<span class="kbd-hint"> · คีย์บอร์ด ↑ ↓ ← → / Space</span></p>
         </div>
         <div class="ctrl-quick">
-          <div class="dash-head"><h3>คำสั่งด่วน</h3></div>
+          <div class="dash-head"><h3>ไฟ &amp; คำสั่งด่วน</h3></div>
           <div class="quick" id="quick"></div>
         </div>
         <div class="ctrl-log">
@@ -212,6 +212,17 @@
           <div class="log" id="log"><div><time>--:--:--</time><span>ยังไม่มีการเรียก API</span></div></div>
         </div>
       </div>
+    </div>
+
+    <!-- Management Operations (same as CSJBot console) -->
+    <div class="card card-pad cut admin-card" id="admin">
+      <div class="dash-head">
+        <h3><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--red-2)"><path d="M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10"/></svg>การจัดการหุ่น <small class="h-sub">Management Operations</small></h3>
+        <div class="admin-meta" id="adminMeta"></div>
+      </div>
+      <div class="op-tiles" id="opTiles"></div>
+      <div class="op-rows-title">การตั้งค่าพื้นฐาน</div>
+      <div class="op-rows" id="opRows"></div>
     </div>
   </div>
 </section>

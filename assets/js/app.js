@@ -37,6 +37,12 @@
     code: '<path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>', copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
     chev: '<path d="M6 9l6 6 6-6"/>',
+    power: '<path d="M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10"/>',
+    refresh: '<path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/>',
+    wrench: '<path d="M14.7 6.3a4 4 0 0 0 5 5L22 14l-8 8-2.3-2.3a4 4 0 0 0-5-5L2 10l8-8z"/>',
+    bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    joystick: '<circle cx="12" cy="6" r="3"/><path d="M12 9v6M5 15h14l1 5H4z"/>',
     star: '<path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
   };
   const svg = (n, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${extra}>${I[n] || I.info}</svg>`;
@@ -47,9 +53,12 @@
     "hub-unlock": "unlock", "hub-lock": "lock", "map-detail": "map", maps: "list", points: "pin",
     "realtime-point": "target", "sse-ui-point": "radio", elevators: "elevator", "point-dict": "list",
     "set-point": "save", "goto-id": "pin", "goto-xy": "target", summon: "phone", "task-cancel": "x",
-    "task-resume": "play", recharge: "home", "all-maps": "map", "set-default-map": "star", "task-pause": "pause", "cancel-goto": "x", "backward-id": "down",
+    "task-resume": "play", recharge: "home", "all-maps": "map", "set-default-map": "star",
+    "power-off": "power", reboot: "refresh", "hub-clear": "wrench", "recharge-cancel": "x", "user-enable": "user",
+    "front-light-on": "bulb", "front-light-off": "bulb", "front-light-setting": "spark", "auto-power-setting": "power", "task-pause": "pause", "cancel-goto": "x", "backward-id": "down",
   };
-  const RISK = { read: ["read", "อ่านอย่างเดียว · ปลอดภัย"], action: ["action", "สั่งงานอุปกรณ์"], motion: ["motion", "หุ่นเคลื่อนที่ · ต้อง ARM"] };
+  const RISK = { read: ["read", "อ่านอย่างเดียว · ปลอดภัย"], action: ["action", "สั่งงานอุปกรณ์"], motion: ["motion", "หุ่นเคลื่อนที่ · ต้อง ARM"], critical: ["motion", "สำคัญมาก · ต้อง ARM"] };
+  const needsArm = (ep) => ep.risk === "motion" || ep.risk === "critical";
 
   /* robot photo hotspots (percent of image) */
   const HOTSPOTS = [
@@ -61,7 +70,7 @@
     { n: 6, x: 57, y: 86, th: "ล้อ & ระบบขับเคลื่อน", go: "cat-chassis" },
   ];
   const CAT_RINGS = {
-    status: [[31, 44]], body: [[63, 13], [76, 59]], chassis: [[57, 86], [19, 84]],
+    status: [[31, 44]], admin: [[31, 44], [57, 86]], body: [[63, 13], [76, 59]], chassis: [[57, 86], [19, 84]],
     map: [[36, 8]], nav: [[36, 8], [57, 86]],
   };
 
@@ -220,7 +229,7 @@
     try {
       const r = await S.call(ep.method, ep.path, args, state.cfg);
       if (!nolog || !r.ok) log(ep, r);
-      if (ep.risk === "motion") bumpArm();
+      if (needsArm(ep)) bumpArm();
       if (!quiet && !r.ok) toast(`#${ep.no} ${ep.th}: ${humanCode(r)}`, "bad");
       return r;
     } catch (e) {
@@ -245,7 +254,7 @@
     if (needCfg()) return null;
     const missing = (ep.params || []).filter((p) => p.required && !p.auto && p.default === undefined && (values[p.name] === undefined || values[p.name] === ""));
     if (missing.length) { toast(`กรอก ${missing.map((p) => "<code>" + esc(p.name) + "</code>").join(", ")} ก่อน`, "bad"); return null; }
-    if (ep.risk === "motion" && !state.armed && !(await requestArm())) return null;
+    if (needsArm(ep) && !state.armed && !(await requestArm())) return null;
     if (ep.confirm) {
       const ok = await ask(`ยืนยัน #${ep.no} ${esc(ep.th)}`, `<p style="margin:0">${esc(ep.desc)}</p>`, "สั่งเลย");
       if (!ok) return null;
@@ -273,6 +282,7 @@
       toast(`ทดสอบไม่ผ่าน: ${esc(humanCode(r))}${r && r.json && (r.json.code === 1000 || r.json.code === 999) ? " — ตรวจ appSecret และเวลาของเครื่อง" : ""}`, "bad");
       return;
     }
+    loadLightSetting();
     toast(r.json.data ? `✔ เชื่อมต่อสำเร็จ — หุ่น ${esc(state.cfg.sn)} ออนไลน์` : "เชื่อมต่อ API ได้ แต่หุ่นออฟไลน์อยู่", r.json.data ? "ok" : "");
     refreshStatus();
   }
@@ -283,6 +293,7 @@
     const r = await run("homepage", {}, { quiet: !manual, nolog: !manual });
     if (!r || !r.ok) { setStatus("bad", humanCode(r)); $("#liveDot").className = "dot bad"; return; }
     const d = r.json.data || {};
+    state.home = d; renderAdmin();
     const online = d.robotOnlineStatus !== false;
     setStatus(online ? "ok" : "bad", `${online ? "ออนไลน์" : "ออฟไลน์"} · ${d.battery ?? "?"}%`);
     $("#liveDot").className = "dot " + (online ? "ok live" : "bad");
@@ -307,16 +318,13 @@
 
   /* quick actions */
   const QUICK = [
+    ["front-light-on", "ไฟหน้า ON", "bulb"], ["front-light-off", "ไฟหน้า OFF", "bulb"],
     ["neon-on", "ไฟนีออน ON", "bulb"], ["neon-off", "ไฟนีออน OFF", "bulb"],
-    ["ambient-blink", "ไฟกะพริบ", "spark"], ["ambient-steady", "ไฟติดค้าง", "bulb"],
-    ["door-open", "เปิดฝา", "door"], ["door-close", "ปิดฝา", "door"],
-    ["hub-lock", "ล็อกล้อ", "lock"], ["hub-unlock", "ปลดล็อกล้อ", "unlock"],
-    ["pause-move:true", "พักการวิ่ง", "pause"], ["pause-move:false", "วิ่งต่อ", "play"],
-    ["task-cancel", "ยกเลิกงาน", "x"], ["recharge", "กลับแท่นชาร์จ", "home"],
+    ["ambient-blink", "ไฟบรรยากาศกะพริบ", "spark"], ["ambient-steady", "ไฟบรรยากาศติดค้าง", "bulb"],
   ];
   $("#quick").innerHTML = QUICK.map(([id, label, ic]) => {
     const ep = EP[id.split(":")[0]];
-    return `<button class="btn sm ${ep.risk === "motion" ? "danger" : ""}" data-quick="${id}" type="button" title="#${ep.no} ${esc(ep.en)}">${svg(ic)}${label}</button>`;
+    return `<button class="btn sm ${needsArm(ep) ? "danger" : ""}" data-quick="${id}" type="button" title="#${ep.no} ${esc(ep.en)}">${svg(ic)}${label}</button>`;
   }).join("");
   $("#quick").onclick = async (e) => {
     const b = e.target.closest("[data-quick]"); if (!b) return;
@@ -327,6 +335,82 @@
     b.disabled = false;
     if (r && r.ok) toast(`✔ ${esc(b.textContent.trim())}`, "ok");
   };
+
+  /* ---------------------------------------------------------------- management operations */
+  // Same controls as the CSJBot console "Management Operations" page; state comes from #2 homepage info.
+  let lightSetting = null;
+  function opTiles(h) {
+    const charging = !!h.backToChargeFlag, paused = !!h.stopMovingFlag;
+    return [
+      { ep: "power-off", label: "ปิดเครื่อง", sub: "Power off", icon: "power", tone: "red" },
+      { ep: "reboot", label: "รีบูต", sub: "Reboot", icon: "refresh", tone: "orange" },
+      { ep: "hub-clear", label: "เคลียร์ล้อขัดข้อง", sub: "Wheel hub clearance", icon: "wrench", tone: "amber" },
+      charging
+        ? { ep: "recharge-cancel", label: "ยกเลิกกลับชาร์จ", sub: "Cancel recharge", icon: "x", tone: "green", on: true }
+        : { ep: "recharge", label: "กลับแท่นชาร์จ", sub: "Recharge", icon: "bolt", tone: "green" },
+      paused
+        ? { ep: "pause-move", vals: { flag: false }, label: "วิ่งต่อ", sub: "Resume movement", icon: "play", tone: "blue", wide: true, on: true }
+        : { ep: "pause-move", vals: { flag: true }, label: "พักการวิ่ง", sub: "Pause", icon: "pause", tone: "blue", wide: true },
+      { ep: "task-cancel", label: "ยกเลิกงาน", sub: "Cancel task", icon: "x", tone: "red", wide: true },
+    ];
+  }
+  function renderAdmin() {
+    const h = state.home || {};
+    const known = !!state.home;
+    const online = known && h.robotOnlineStatus !== false;
+    $("#adminMeta").innerHTML = known
+      ? `<span class="pill sm-pill"><i class="dot ${online ? "ok" : "bad"}"></i>${online ? "Online" : "Offline"}</span>
+         <span class="meta-txt">สถานะ: <b>${esc(h.robotRunningState || "-")}</b></span>
+         <span class="meta-txt">${svg("battery", 'width="15" height="15"')} ${h.battery ?? "-"}%</span>
+         <span class="meta-txt">${h.linearVelocity != null ? Number(h.linearVelocity).toFixed(1) : "-"} m/s</span>`
+      : `<button class="btn xs" type="button" data-admin-refresh>${svg("refresh")}โหลดสถานะ</button>`;
+    $("#opTiles").innerHTML = opTiles(h).map((t, i) => {
+      const ep = EP[t.ep];
+      return `<button type="button" class="op-tile tone-${t.tone}${t.wide ? " wide" : ""}${t.on ? " on" : ""}" data-op="${i}" title="#${ep.no} ${esc(ep.en)} — ${esc(ep.path)}">
+        <span class="op-ic">${svg(t.icon)}</span><b>${esc(t.label)}</b><small>${esc(t.sub)}${needsArm(ep) ? " · ARM" : ""}</small></button>`;
+    }).join("");
+    const doorOpen = !!h.cabinDoorStatus, enabled = h.enableStatus !== false, locked = h.hubShaftStatus !== false;
+    const ls = lightSetting;
+    const lightTxt = !ls ? "" : ls.isAutoFrontLightOnOff ? `ไฟอัตโนมัติ: เปิด ${esc(ls.autoFrontLightOnTime || "")}–${esc(ls.autoFrontLightOffTime || "")}` : "ไฟอัตโนมัติ: ปิดอยู่ / ยังไม่ตั้ง";
+    const row = (label, sub, right) => `<div class="op-row"><div><b>${label}</b><small>${sub}</small></div><div class="op-right">${right}</div></div>`;
+    const sw = (key, on, txtOn, txtOff) => `<span class="op-state ${on ? "is-on" : ""}">${on ? txtOn : txtOff}</span><label class="switch"><input type="checkbox" data-op-switch="${key}" ${on ? "checked" : ""} ${known ? "" : "disabled"} aria-label="${txtOn}" /></label>`;
+    $("#opRows").innerHTML = [
+      row("ฝาช่องเก็บของ", "Cabin door status · #4/#5", sw("door", doorOpen, "ฝาเปิดอยู่", "ฝาปิดอยู่")),
+      row("การใช้งานของผู้ใช้", "User disable · #41", sw("user", enabled, "พร้อมใช้งาน", "ปิดการใช้งาน")),
+      row("ล็อกล้อ", "Hub status · #11/#10", sw("hub", locked, "ล้อล็อกอยู่", "ล้อปลดล็อก (เข็นได้)")),
+      row("บังคับด้วยมือ", "Remote control", `<button class="btn sm" type="button" data-op-remote>${svg("joystick")}เปิดจอยบังคับ</button>`),
+      row("ไฟหน้า", `Light status · #42/#43${lightTxt ? " · " + lightTxt : ""}`, `<button class="btn sm" type="button" data-op-light="on">${svg("bulb")}เปิด</button><button class="btn sm" type="button" data-op-light="off">ปิด</button>`),
+    ].join("");
+  }
+  async function opRun(epId, vals, okMsg) {
+    const r = await guardedRun(EP[epId], vals || {});
+    if (r && r.ok) toast("✔ " + okMsg, "ok");
+    setTimeout(() => refreshStatus(), 700);
+    return r;
+  }
+  $("#opTiles").onclick = (e) => {
+    const b = e.target.closest("[data-op]"); if (!b) return;
+    const t = opTiles(state.home || {})[+b.dataset.op];
+    opRun(t.ep, t.vals, t.label);
+  };
+  $("#opRows").addEventListener("change", async (e) => {
+    const cb = e.target.closest("[data-op-switch]"); if (!cb) return;
+    const on = cb.checked, k = cb.dataset.opSwitch;
+    cb.checked = !on; // show the real state until the robot confirms
+    if (k === "door") await opRun(on ? "door-open" : "door-close", {}, on ? "เปิดฝาแล้ว" : "ปิดฝาแล้ว");
+    if (k === "user") await opRun("user-enable", { data: on }, on ? "เปิดการใช้งานแล้ว" : "ปิดการใช้งานแล้ว");
+    if (k === "hub") await opRun(on ? "hub-lock" : "hub-unlock", {}, on ? "ล็อกล้อแล้ว" : "ปลดล็อกล้อแล้ว");
+  });
+  $("#opRows").addEventListener("click", (e) => {
+    if (e.target.closest("[data-op-remote]")) { $(".ctrl-card").scrollIntoView({ behavior: "smooth", block: "center" }); $(".ctrl-card").classList.remove("flash"); void $(".ctrl-card").offsetWidth; $(".ctrl-card").classList.add("flash"); }
+    const l = e.target.closest("[data-op-light]");
+    if (l) opRun(l.dataset.opLight === "on" ? "front-light-on" : "front-light-off", {}, l.dataset.opLight === "on" ? "เปิดไฟหน้าแล้ว" : "ปิดไฟหน้าแล้ว");
+  });
+  $("#adminMeta").addEventListener("click", (e) => { if (e.target.closest("[data-admin-refresh]")) refreshStatus(true); });
+  async function loadLightSetting() {
+    const r = await run("front-light-setting", {}, { quiet: true, nolog: true });
+    if (r && r.ok) { lightSetting = r.json.data || {}; renderAdmin(); }
+  }
 
   /* ---------------------------------------------------------------- E-STOP */
   async function emergencyStop() {
@@ -764,6 +848,7 @@
     const params = ep.params || [];
     const warn = ep.disabled ? `<div class="warn-box dep">${svg("alert")}<span>${esc(ep.disabled)}</span></div>`
       : ep.deprecated ? `<div class="warn-box dep">${svg("alert")}<span>เลิกใช้แล้ว — ${esc(ep.deprecated)}</span></div>`
+      : ep.risk === "critical" ? `<div class="warn-box motion">${svg("alert")}<span>คำสั่งนี้ปิด/รีบูตหุ่นจริง — หุ่นจะออฟไลน์ ต้องเปิด ARM ก่อน</span></div>`
       : ep.risk === "motion" ? `<div class="warn-box motion">${svg("alert")}<span>คำสั่งนี้ทำให้หุ่นเคลื่อนที่จริง — ต้องเปิด ARM และตรวจพื้นที่รอบหุ่นก่อน</span></div>` : "";
     return `<div class="ep-body">
       <div class="ep-left">
@@ -816,7 +901,7 @@
     const head = btn.classList.contains("head-run");
     if (ep.disabled) { btn.disabled = true; btn.innerHTML = `${svg("x")}${head ? "ปิดใช้งาน" : "เรียกไม่ได้"}`; return; }
     if (btn.dataset.busy) return;
-    const locked = ep.risk === "motion" && !state.armed;
+    const locked = needsArm(ep) && !state.armed;
     btn.classList.toggle("motion-locked", locked);
     btn.title = locked ? "คำสั่งนี้ทำให้หุ่นเคลื่อนที่ — กดเพื่อเปิด ARM" : `เรียก #${ep.no} ${ep.th}`;
     btn.innerHTML = locked ? `${svg("lock")}${head ? "ARM" : "ARM แล้วลอง"}` : ep.stream ? `${svg("radio")}${head ? "ฟังสด" : "ฟังสตรีม 15 วิ"}` : `${svg("play")}ลองเลย`;
@@ -1152,7 +1237,8 @@
   resizeCanvas();
   onCfgChanged();
   setArmed(false);
-  if (configured()) { setStatus("warn", "กำลังเชื่อมต่อ…"); refreshStatus(); }
+  renderAdmin();
+  if (configured()) { setStatus("warn", "กำลังเชื่อมต่อ…"); refreshStatus(); loadLightSetting(); }
   else setTimeout(() => toast("เริ่มต้น: ใส่ API Key ของหุ่นก่อน", "", { label: "ตั้งค่า", fn: openCfg }), 700);
   if (location.hash.startsWith("#ep-")) openEp(location.hash.slice(4), true);
 })();

@@ -28,6 +28,24 @@
 ทั้ง #35 และ #36 ตรวจแล้วว่าใช้ Alpha-Sign เดียวกันได้ · **Set default ไม่ได้สลับแผนที่ที่หุ่นใช้อยู่ทันที** — #27 ยังคืนแผนที่เดิม หุ่นจะใช้แผนที่เริ่มต้นเมื่อโหลดแผนที่ใหม่ (ต้องอยู่ในพื้นที่ของแผนที่นั้นและตั้งตำแหน่งที่ตัวหุ่น)
 พิกัดเมตร → พิกเซลบนรูป: `px = (x − realX) / resolution`, `py = height − (y − realY) / resolution`
 
+## การจัดการหุ่น (Management Operations — จากคอนโซล CSJBot, นอกเอกสาร v5)
+
+| # | Endpoint | ปุ่มในคอนโซล |
+|---|---|---|
+| 37 | `PUT /app-api/server/robot-setting/shutdown-robot` | Power off (ต้อง ARM) |
+| 38 | `PUT /app-api/server/robot-setting/reboot-robot` | Reboot (ต้อง ARM) |
+| 39 | `PUT /app-api/server/command/chassis/clear-hub-malfunction` | Wheel hub clearance |
+| 33 / 40 | `PUT …/battery-recharge` / `PUT …/cancel-battery-recharge` | Recharge (toggle ตาม `backToChargeFlag`) |
+| 34 | `GET /app-api/server/move/v2/stop?flag=true\|false` | Pause (toggle ตาม `stopMovingFlag`) |
+| 30 | `PUT /app-api/server/task/cancel` | Cancel task |
+| 4 / 5 | `PUT …/cabin-door/open` / `close` | Cabin door status |
+| 41 | `POST /app-api/server/robot-setting/change-robot-status` body `{"data": true\|false}` | User disable (true = ใช้งานได้) |
+| 11 / 10 | `PUT …/chassis/lock-hub-shaft` / `unlock-hub-shaft` | Hub status |
+| 42 / 43 | `PUT /app-api/server/light/open-front-light` / `close-front-light` | Light status |
+| 44 / 45 | `GET …/get-auto-front-light-setting` / `get-auto-power-on-off-setting` | Auto strategy (อ่านอย่างเดียว) |
+
+สถานะทุกสวิตช์อ่านจาก #2 (`cabinDoorStatus`, `enableStatus`, `hubShaftStatus`, `stopMovingFlag`, `backToChargeFlag`)
+
 ## API Key — ไม่มีอยู่ใน repo นี้
 
 - เว็บนี้ **ไม่มี key ฝังในโค้ด** ผู้ใช้กรอกเองที่ปุ่ม ⚙ (Robot SN, App ID, App Key, appSecret)
