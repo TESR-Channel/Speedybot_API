@@ -931,6 +931,7 @@
   document.addEventListener("click", (e) => { if (mnav.classList.contains("on") && !e.target.closest("#mnav")) setMenu(false); });
   window.addEventListener("resize", () => { if (innerWidth >= 1100) setMenu(false); });
   $$("[data-open-cfg]").forEach((b) => (b.onclick = openCfg));
+  $$("form").forEach((f) => f.addEventListener("submit", (e) => { e.preventDefault(); if (f.id === "cfgForm") $("#cfgSave").click(); }));
 
   /* highlight the category chip of the section in view (phone/tablet bar) */
   function observeCats() {

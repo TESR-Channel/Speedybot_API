@@ -245,12 +245,16 @@
       <p>คลิกที่หัวข้อเพื่อเปิด → แก้ค่าพารามิเตอร์ → <b>▶ ลองเลย</b> · ปุ่ม <b>JS</b> / <b>Python</b> สร้างโค้ดพร้อมรันจากค่าที่กรอกไว้</p>
     </div>
     <div class="xbar" id="xbar">
-      <input type="search" id="msearch" name="api-filter-m" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="ค้นหา API… (ไทย/อังกฤษ/path/#เลข)" aria-label="ค้นหา API" />
+      <form role="search" class="sform" autocomplete="off">
+        <input type="search" id="msearch" name="api-filter-m" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="ค้นหา API… (ไทย/อังกฤษ/path/#เลข)" aria-label="ค้นหา API" />
+      </form>
       <div class="mobile-cats" id="mobileCats"></div>
     </div>
     <div class="explorer">
       <aside class="card side" id="side">
-        <input type="search" id="search" name="api-filter-d" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="ค้นหา API… (ไทย/อังกฤษ/path)" aria-label="ค้นหา API" />
+        <form role="search" class="sform" autocomplete="off">
+          <input type="search" id="search" name="api-filter-d" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="ค้นหา API… (ไทย/อังกฤษ/path)" aria-label="ค้นหา API" />
+        </form>
         <div id="sideList"></div>
       </aside>
       <div id="catList"></div>
@@ -340,7 +344,7 @@
         <div class="field"><textarea id="pasteBox" rows="5" placeholder="Alpha-Robot-Sn: 4E00…&#10;Alpha-App-Id: …&#10;Alpha-App-Key: …&#10;appSecret: …"></textarea></div>
         <button class="btn sm" id="pasteApply" type="button" style="margin-top:8px">แยกค่าอัตโนมัติ</button>
       </details>
-      <div class="cfg-grid">
+      <form class="cfg-grid" id="cfgForm" autocomplete="off">
         <div class="field"><label for="c-sn"><code>Alpha-Robot-Sn</code><em>หมายเลขเครื่องของหุ่น</em></label><input id="c-sn" autocomplete="off" spellcheck="false" placeholder="4E00…" /></div>
         <div class="field"><label for="c-id"><code>Alpha-App-Id</code><em>App ID ที่ได้จากผู้ผลิต</em></label><input id="c-id" autocomplete="off" spellcheck="false" /></div>
         <div class="field"><label for="c-key"><code>Alpha-App-Key</code><em>App Key</em></label>
@@ -349,7 +353,7 @@
           <div class="secret-row"><input id="c-secret" type="password" autocomplete="off" spellcheck="false" /><button class="btn icon sm" type="button" data-reveal="c-secret" aria-label="แสดง/ซ่อน">👁</button></div></div>
         <div class="field"><label for="c-lang"><code>Alpha-language</code><em>ภาษาของข้อความตอบกลับ</em></label><select id="c-lang"></select></div>
         <label class="switch"><input type="checkbox" id="c-remember" /> จำไว้ในเครื่องนี้ (localStorage) — ไม่ติ๊ก = ลบเมื่อปิดแท็บ</label>
-      </div>
+      </form>
     </div>
     <footer>
       <button class="btn sm danger grow" id="cfgClear" type="button">ล้างค่าทั้งหมด</button>
