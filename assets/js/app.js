@@ -404,7 +404,7 @@
     ctx.translate(map.ox, map.oy); ctx.scale(map.s, map.s);
     ctx.imageSmoothingEnabled = map.s < 1;
     if (map.img && map.img.complete && map.img.naturalWidth) {
-      ctx.globalAlpha = 0.92; ctx.filter = "invert(1) hue-rotate(180deg) brightness(0.9)";
+      ctx.globalAlpha = 0.85; ctx.filter = "invert(1) hue-rotate(180deg) brightness(0.9)";
       ctx.drawImage(map.img, 0, 0, map.data.width, map.data.height);
       ctx.filter = "none"; ctx.globalAlpha = 1;
     } else {
@@ -615,7 +615,8 @@
     else if (p.picker === "point") input = `<div class="row"><input id="${id}" data-p="${p.name}" type="number" placeholder="id" value="${esc(v)}" style="max-width:110px" /><select data-picker="point" data-for="${id}"><option value="">— กด “โหลดจุด” —</option></select><button class="btn sm" type="button" data-loadpoints>โหลดจุด</button></div>`;
     else if (p.picker === "dict") input = `<div class="row"><select id="${id}" data-p="${p.name}" data-picker="dict"><option value="${esc(v)}">${esc(v)}</option></select><button class="btn sm" type="button" data-loaddict>โหลดประเภท</button></div>`;
     else input = `<input id="${id}" data-p="${p.name}" type="${p.type === "int" || p.type === "number" ? "number" : "text"}" ${p.type === "number" ? 'step="any"' : ""} value="${esc(v)}" placeholder="${p.required ? "" : "(ไม่บังคับ)"}" spellcheck="false" />`;
-    return `<div class="field">${lab}${input}${help}</div>`;
+    const wide = p.auto || p.picker || p.options || p.type === "string";
+    return `<div class="field${wide ? " wide" : ""}">${lab}${input}${help}</div>`;
   }
   function epBody(ep) {
     const params = ep.params || [];
@@ -626,7 +627,7 @@
       <div class="ep-left">
         <p class="ep-desc">${esc(ep.desc)}</p>
         ${warn}
-        ${params.length ? `<div class="params">${params.map((p) => fieldHtml(ep, p)).join("")}</div>` : `<div class="no-params">ไม่ต้องใส่พารามิเตอร์ — header ลายเซ็นทั้งหมดสร้างให้อัตโนมัติ</div>`}
+        ${params.length ? `<div class="params${params.filter((p) => !p.auto).length >= 3 ? " cols" : ""}">${params.map((p) => fieldHtml(ep, p)).join("")}</div>` : `<div class="no-params">ไม่ต้องใส่พารามิเตอร์ — header ลายเซ็นทั้งหมดสร้างให้อัตโนมัติ</div>`}
         <div class="actions">
           <button class="btn primary run" type="button" data-run="${ep.id}"></button>
           <button class="btn gold sm" type="button" data-export="js" title="Export JavaScript">${svg("code")}JS</button>
