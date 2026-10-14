@@ -678,6 +678,8 @@ footer.site .grow { flex: 1; }
 .map-card .meta { padding: 8px 10px 9px; }
 .map-card b { display: block; font: 600 13.5px var(--f-head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .map-card small { display: flex; gap: 6px; align-items: center; font-size: 11.5px; color: var(--dim); flex-wrap: wrap; }
+.map-card .def-tag { color: #2a1d05; background: var(--gold); padding: 1px 7px; border-radius: 999px; font-weight: 600; }
+.map-note .note-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .map-card .live-tag { color: #fff; background: var(--red); padding: 1px 7px; border-radius: 999px; font-weight: 600; }
 .map-note { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-2); margin: 10px 0 0; padding: 9px 12px; border-radius: 8px; border: 1px dashed var(--expand-line); background: var(--expand-bg); }
 .map-note svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--gold-ink); }

@@ -37,6 +37,7 @@
     code: '<path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>', copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
     chev: '<path d="M6 9l6 6 6-6"/>',
+    star: '<path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
   };
   const svg = (n, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${extra}>${I[n] || I.info}</svg>`;
   const EP_ICON = {
@@ -46,7 +47,7 @@
     "hub-unlock": "unlock", "hub-lock": "lock", "map-detail": "map", maps: "list", points: "pin",
     "realtime-point": "target", "sse-ui-point": "radio", elevators: "elevator", "point-dict": "list",
     "set-point": "save", "goto-id": "pin", "goto-xy": "target", summon: "phone", "task-cancel": "x",
-    "task-resume": "play", recharge: "home", "task-pause": "pause", "cancel-goto": "x", "backward-id": "down",
+    "task-resume": "play", recharge: "home", "all-maps": "map", "set-default-map": "star", "task-pause": "pause", "cancel-goto": "x", "backward-id": "down",
   };
   const RISK = { read: ["read", "อ่านอย่างเดียว · ปลอดภัย"], action: ["action", "สั่งงานอุปกรณ์"], motion: ["motion", "หุ่นเคลื่อนที่ · ต้อง ARM"] };
 
@@ -405,12 +406,12 @@
 
   function buildMarks() {
     const v = map.view; map.marks = [];
-    if (!v || !v.isCurrent) return;
+    if (!v || !v.width || v.realX == null || !v.res) return;
     state.points.filter((p) => sameId(p.mapId, v.id)).forEach((p) => {
       const [px, py] = m2px(v, +p.pointX, +p.pointY);
       map.marks.push({ name: p.pointName, id: p.id, flag: p.flagName, px, py });
     });
-    (map.current.graphicPointList || []).forEach((g) => {
+    (v.graphicPointList || []).forEach((g) => {
       if (!map.marks.some((m) => m.name === g.pointName)) map.marks.push({ name: g.pointName, id: null, px: g.pointX, py: g.pointY });
     });
   }
@@ -432,7 +433,7 @@
       ctx.strokeStyle = light ? "rgba(70,20,28,.3)" : "rgba(255,255,255,.2)"; ctx.lineWidth = 2 / map.s; ctx.strokeRect(0, 0, v.width, v.height);
     }
     ctx.restore();
-    // points (current map only — other maps have no origin data in the API)
+    // points (any map with origin data from #27 / #35)
     map.marks.forEach((m) => {
       const [x, y] = toScreen(m.px, m.py);
       const on = map.sel === m;
@@ -460,6 +461,7 @@
   function imgUrlFor(m) {
     if (!map.current) return null;
     if (sameId(m.id, map.current.id)) return map.current.mapUrl;
+    if (m.mapUrl) return m.mapUrl;
     const u = map.current.mapUrl || "";
     return u ? u.slice(0, u.lastIndexOf("/") + 1) + encodeURIComponent(m.name) + ".png" : null;
   }
@@ -468,7 +470,9 @@
     const btn = $("#loadMapBtn");
     $("#mapEmpty").hidden = false; $("#mapEmpty").textContent = "กำลังโหลดแผนที่…";
     btn.disabled = true;
-    const [rl, rc] = await Promise.all([run("maps", {}, { quiet: true }), run("map-detail")]);
+    const [ra, rc] = await Promise.all([run("all-maps", {}, { quiet: true }), run("map-detail")]);
+    let rl = ra;
+    if (!ra || !ra.ok || !Array.isArray(ra.json.data)) rl = await run("maps", {}, { quiet: true }); // fallback: documented list only
     btn.disabled = false;
     if (!rc || !rc.ok) { $("#mapEmpty").textContent = "โหลดแผนที่ไม่สำเร็จ: " + humanCode(rc); return; }
     map.current = rc.json.data;
@@ -479,6 +483,7 @@
     map.list.sort((a, b) => (sameId(b.id, map.current.id) ? 1 : 0) - (sameId(a.id, map.current.id) ? 1 : 0));
     await loadPoints(true);
     renderPicker();
+    $$("select[data-picker=map]").forEach(fillMapSelect);
     selectMap(map.view && map.list.some((m) => sameId(m.id, map.view.id)) ? map.view.id : map.current.id);
     btn.textContent = "รีเฟรชแผนที่";
   }
@@ -492,7 +497,7 @@
       const url = imgUrlFor(m);
       return `<button type="button" class="map-card" role="option" aria-selected="false" data-map="${esc(m.id)}" title="${esc(mapTitle(m))} (id ${esc(m.id)}, file ${esc(m.name)})">
         <div class="thumb"><em>ไม่มีรูปแผนที่</em>${url ? `<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()" />` : ""}</div>
-        <div class="meta"><b>${esc(mapTitle(m))}</b><small>${cur ? '<span class="live-tag">ใช้งานอยู่</span>' : ""}ชั้น ${esc(m.floor ?? "-")} · ${n} จุด</small></div>
+        <div class="meta"><b>${esc(mapTitle(m))}</b><small>${cur ? '<span class="live-tag">ใช้งานอยู่</span>' : ""}${m.isDefault ? '<span class="def-tag">★ เริ่มต้น</span>' : ""}ชั้น ${esc(m.floor ?? "-")} · ${n} จุด</small></div>
       </button>`;
     }).join("");
     if (map.view) markPicker(map.view.id);
@@ -509,7 +514,9 @@
     map.sel = null; $("#mapPop")?.remove();
     const v = isCurrent
       ? { id: c.id, name: c.name, title: mapTitle(c), floor: c.floor, width: c.width, height: c.height, res: c.resolution, realX: c.realX, realY: c.realY, url: c.mapUrl, isCurrent: true }
-      : { id: m.id, name: m.name, title: mapTitle(m), floor: m.floor, width: 0, height: 0, url: imgUrlFor(m), isCurrent: false };
+      : { id: m.id, name: m.name, title: mapTitle(m), floor: m.floor, width: +m.width || 0, height: +m.height || 0, res: m.resolution, realX: m.realX, realY: m.realY, url: imgUrlFor(m), isCurrent: false, graphicPointList: m.graphicPointList };
+    if (isCurrent) v.graphicPointList = c.graphicPointList;
+    v.isDefault = !!m.isDefault; v.fileName = m.name;
     map.view = v;
     buildMarks();
     $("#mapEmpty").hidden = true;
@@ -537,12 +544,29 @@
   }
   function renderMapNote() {
     const v = map.view, el = $("#mapNote");
-    if (!v || v.isCurrent) { el.hidden = true; return; }
+    if (!v) { el.hidden = true; return; }
+    const def = map.list.find((m) => m.isDefault);
+    const setBtn = v.isDefault ? "" : `<button class="btn xs gold" type="button" data-set-default>${svg("star")}ตั้ง “${esc(v.title)}” เป็นแผนที่เริ่มต้น</button>`;
+    let msg;
+    if (v.isCurrent && (v.isDefault || !def)) { el.hidden = true; return; }
+    if (v.isCurrent) msg = `<b>หุ่นกำลังวิ่งบนแผนที่นี้</b> · แต่แผนที่เริ่มต้นตอนนี้คือ “${esc(mapTitle(def))}” — หุ่นจะใช้แผนที่เริ่มต้นเมื่อโหลดแผนที่ใหม่`;
+    else msg = `<b>ไม่ใช่แผนที่ที่หุ่นใช้อยู่</b> (หุ่นวิ่งบน “${esc(mapTitle(map.current))}”) · ดูรูปและจุดได้ แต่ไม่มีตำแหน่งหุ่นสด${v.isDefault ? " · แผนที่นี้เป็น <b>★ แผนที่เริ่มต้น</b> แล้ว หุ่นจะใช้เมื่อโหลดแผนที่ใหม่ (รีสตาร์ต/ตั้งตำแหน่งที่ตัวหุ่น)" : ""}`;
     el.hidden = false;
-    el.innerHTML = `${svg("info")}<span><b>โหมดดูตัวอย่าง</b> — หุ่นใช้แผนที่ “${esc(mapTitle(map.current))}” อยู่ · API v5 ยังไม่มีคำสั่งสลับแผนที่ (ต้องสลับที่ตัวหุ่นหรือแอปผู้ผลิต) จึงแสดงได้เฉพาะรูปแผนที่และรายชื่อจุด ไม่มีตำแหน่งหุ่นสด
-      <button class="btn xs" type="button" data-map-back>กลับไปแผนที่ที่ใช้อยู่</button></span>`;
+    el.innerHTML = `${svg("info")}<span>${msg}<span class="note-actions">${setBtn}${v.isCurrent ? "" : '<button class="btn xs" type="button" data-map-back>กลับไปแผนที่ที่ใช้อยู่</button>'}</span></span>`;
   }
-  $("#mapNote").onclick = (e) => { if (e.target.closest("[data-map-back]") && map.current) selectMap(map.current.id); };
+  $("#mapNote").onclick = (e) => {
+    if (e.target.closest("[data-map-back]") && map.current) selectMap(map.current.id);
+    if (e.target.closest("[data-set-default]") && map.view) setDefaultMap(map.view.fileName, map.view.title);
+  };
+  async function setDefaultMap(fileName, title) {
+    if (needCfg()) return;
+    const ok = await ask(`${svg("star", 'width="20" style="color:var(--gold)"')} ตั้งแผนที่เริ่มต้น?`,
+      `<p style="margin:0 0 8px">ตั้ง <b>“${esc(title || fileName)}”</b> (ไฟล์ <code>${esc(fileName)}</code>) เป็นแผนที่เริ่มต้นของหุ่น — เหมือนกด “Set default” ในคอนโซล CSJBot</p>
+       <ul class="sec-list"><li>หุ่น<b>ยังวิ่งบนแผนที่เดิม</b>จนกว่าจะโหลดแผนที่ใหม่ (รีสตาร์ต / ตั้งตำแหน่งที่ตัวหุ่น)</li><li>ก่อนสลับจริง ต้องย้ายหุ่นไปอยู่ในพื้นที่ของแผนที่นั้น ไม่อย่างนั้นหุ่นจะหาตำแหน่งตัวเองไม่เจอ</li></ul>`, "ตั้งเป็นแผนที่เริ่มต้น");
+    if (!ok) return;
+    const r = await run("set-default-map", { data: fileName });
+    if (r && r.ok) { toast(`★ ตั้ง “${esc(title || fileName)}” เป็นแผนที่เริ่มต้นแล้ว`, "ok"); await loadMap(); }
+  }
 
   $("#zoomIn").onclick = () => zoomAt(box.clientWidth / 2, box.clientHeight / 2, 1.35);
   $("#zoomOut").onclick = () => zoomAt(box.clientWidth / 2, box.clientHeight / 2, 1 / 1.35);
@@ -663,6 +687,12 @@
     if (r && r.ok) toast(`🚀 ส่งคำสั่งไป${p ? " “" + esc(p.pointName) + "”" : "ยังจุด"}แล้ว`, "ok");
   }
   $("#pointsList").onclick = (e) => { const g = e.target.closest("[data-goto]"); if (g) gotoPoint(g.dataset.goto); };
+  function fillMapSelect(sel) {
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">— เลือกแผนที่ (${map.list.length}) —</option>` +
+      map.list.map((m) => `<option value="${esc(m.name)}">${esc(mapTitle(m))}${m.mapName && m.mapName !== m.name ? " (" + esc(m.name) + ")" : ""}${m.isDefault ? " ★" : ""}${map.current && sameId(m.id, map.current.id) ? " · ใช้งานอยู่" : ""}</option>`).join("");
+    sel.value = cur;
+  }
   function fillPointSelect(sel) {
     const cur = sel.value;
     sel.innerHTML = `<option value="">— เลือกจุด (${state.points.length}) —</option>` +
@@ -724,6 +754,7 @@
     else if (p.options) input = `<select id="${id}" data-p="${p.name}">${p.options.map(([ov, ol]) => `<option value="${ov}" ${String(ov) === String(v) ? "selected" : ""}>${esc(ol)}</option>`).join("")}</select>`;
     else if (p.type === "bool") input = `<select id="${id}" data-p="${p.name}"><option value="true" ${String(v) === "true" ? "selected" : ""}>true</option><option value="false" ${String(v) === "false" ? "selected" : ""}>false</option></select>`;
     else if (p.picker === "point") input = `<div class="row"><input id="${id}" data-p="${p.name}" type="number" placeholder="id" value="${esc(v)}" style="max-width:110px" /><select data-picker="point" data-for="${id}"><option value="">— กด “โหลดจุด” —</option></select><button class="btn sm" type="button" data-loadpoints>โหลดจุด</button></div>`;
+    else if (p.picker === "map") input = `<div class="row"><input id="${id}" data-p="${p.name}" type="text" placeholder="เช่น tesr_test_1" value="${esc(v)}" spellcheck="false" /><select data-picker="map" data-for="${id}"></select><button class="btn sm" type="button" data-loadmaps>โหลดแผนที่</button></div>`;
     else if (p.picker === "dict") input = `<div class="row"><select id="${id}" data-p="${p.name}" data-picker="dict"><option value="${esc(v)}">${esc(v)}</option></select><button class="btn sm" type="button" data-loaddict>โหลดประเภท</button></div>`;
     else input = `<input id="${id}" data-p="${p.name}" type="${p.type === "int" || p.type === "number" ? "number" : "text"}" ${p.type === "number" ? 'step="any"' : ""} value="${esc(v)}" placeholder="${p.required ? "" : "(ไม่บังคับ)"}" spellcheck="false" />`;
     const wide = p.auto || p.picker || p.options || p.type === "string";
@@ -833,6 +864,7 @@
       art.insertAdjacentHTML("beforeend", epBody(EP[id]));
       updateRunBtn(art.querySelector(".ep-body [data-run]"));
       art.querySelectorAll("select[data-picker=point]").forEach(fillPointSelect);
+      art.querySelectorAll("select[data-picker=map]").forEach(fillMapSelect);
       if (state.dict.length) art.querySelectorAll("select[data-picker=dict]").forEach(fillDictSelect);
       if (state.last[id]) renderResult(EP[id], state.last[id]);
     }
@@ -870,6 +902,7 @@
     }
     if (e.target.closest("[data-loadpoints]")) { if (!needCfg()) loadPoints(); return; }
     if (e.target.closest("[data-loaddict]")) { if (!needCfg()) loadDict(); return; }
+    if (e.target.closest("[data-loadmaps]")) { if (!needCfg()) loadMap(); return; }
     const ex = e.target.closest("[data-export]");
     if (ex) { openCode({ ep, values: collectValues(ep, art) }, ex.dataset.export); return; }
   });
@@ -900,10 +933,10 @@
     setHeadStatus(ep, r);
     if (ep.id === "points" && r.ok) setPoints(r.json.data);
     if (ep.id === "point-dict" && r.ok) { state.dict = r.json.data || []; $$("select[data-picker=dict]").forEach(fillDictSelect); }
-    if (ep.id === "maps" && r.ok && map.current) { loadMap(); }
+    if ((ep.id === "maps" || ep.id === "all-maps" || ep.id === "set-default-map") && r.ok) { loadMap(); }
   }
   $("#catList").addEventListener("change", (e) => {
-    const sel = e.target.closest("select[data-picker=point]");
+    const sel = e.target.closest("select[data-picker=point], select[data-picker=map]");
     if (sel && sel.value) $("#" + sel.dataset.for).value = sel.value;
   });
   $("#sideList").addEventListener("click", (e) => {
