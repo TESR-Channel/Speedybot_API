@@ -351,7 +351,7 @@
       paused
         ? { ep: "pause-move", vals: { flag: false }, label: "วิ่งต่อ", sub: "Resume movement", icon: "play", tone: "blue", wide: true, on: true }
         : { ep: "pause-move", vals: { flag: true }, label: "พักการวิ่ง", sub: "Pause", icon: "pause", tone: "blue", wide: true },
-      { ep: "task-cancel", label: "ยกเลิกงาน", sub: "Cancel task", icon: "x", tone: "red", wide: true },
+      { ep: "task-cancel", label: "ยกเลิกงาน", sub: "Cancel task", icon: "x", tone: "red", wide: true, full: true },
     ];
   }
   function renderAdmin() {
@@ -366,7 +366,7 @@
       : `<button class="btn xs" type="button" data-admin-refresh>${svg("refresh")}โหลดสถานะ</button>`;
     $("#opTiles").innerHTML = opTiles(h).map((t, i) => {
       const ep = EP[t.ep];
-      return `<button type="button" class="op-tile tone-${t.tone}${t.wide ? " wide" : ""}${t.on ? " on" : ""}" data-op="${i}" title="#${ep.no} ${esc(ep.en)} — ${esc(ep.path)}">
+      return `<button type="button" class="op-tile tone-${t.tone}${t.wide ? " wide" : ""}${t.full ? " full" : ""}${t.on ? " on" : ""}" data-op="${i}" title="#${ep.no} ${esc(ep.en)} — ${esc(ep.path)}">
         <span class="op-ic">${svg(t.icon)}</span><b>${esc(t.label)}</b><small>${esc(t.sub)}${needsArm(ep) ? " · ARM" : ""}</small></button>`;
     }).join("");
     const doorOpen = !!h.cabinDoorStatus, enabled = h.enableStatus !== false, locked = h.hubShaftStatus !== false;
