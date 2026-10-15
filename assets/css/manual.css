@@ -104,8 +104,11 @@ body.noscroll { overflow: hidden; }
 /* images */
 .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; margin: 12px 0 4px; }
 .shots.one { grid-template-columns: minmax(0, 560px); }
-.shots.one:has(.wide) { grid-template-columns: minmax(0, 880px); }
-.shots figure.wide .shot img { max-height: 520px; }
+.shots.one:has(.wide) { grid-template-columns: minmax(0, 920px); }
+.shots.one:has(.tall) { grid-template-columns: minmax(0, 340px); }
+.shots:has(figure.wide):not(.one) { grid-template-columns: minmax(0, 1fr); }
+.shots figure.wide .shot img { max-height: 620px; }
+.shots figure.tall .shot img { max-height: 640px; }
 .shots figure { margin: 0; }
 .shot {
   all: unset; display: block; cursor: zoom-in; border-radius: 12px; overflow: hidden;

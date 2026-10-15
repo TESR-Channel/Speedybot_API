@@ -11,7 +11,13 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const BASE = "assets/manual/";
   /* wide (multi-screenshot) images get full width instead of the side column */
-  window.markWide = (img) => { const f = img.closest("figure"); if (f) f.classList.toggle("wide", img.naturalWidth / img.naturalHeight > 1.5); };
+  window.markWide = (img) => {
+    const f = img.closest("figure"); if (!f) return;
+    const r = img.naturalWidth / img.naturalHeight;
+    f.classList.toggle("tall", r < 0.8);
+    f.classList.toggle("mid", r >= 0.8 && r < 1.2);
+    f.classList.toggle("wide", r >= 1.2);
+  };
 
   const UI = {
     th: {
