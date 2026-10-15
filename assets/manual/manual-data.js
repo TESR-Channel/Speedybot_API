@@ -61,10 +61,11 @@
       creds: {
         title: L("ข้อมูลเข้าระบบของหุ่นคุณ", "Your robot's access details"),
         note: L("กรอกเก็บไว้ · ห้ามแชร์บัญชีให้บุคคลอื่น · ติดต่อ TESR หากลืมรหัส", "Fill in and keep safe · do not share the account · contact TESR for resets"),
+        pwNote: L("* รหัสผ่านในคู่มือนี้เป็น<b>รหัสตัวอย่าง (ค่าเริ่มต้น)</b> อาจมีการเปลี่ยนแปลงในอนาคต หากต้องการเปลี่ยนรหัส หรือใช้รหัสนี้ไม่ได้ กรุณาแจ้งผู้ดูแลระบบ (Admin) / TESR", "* Passwords in this manual are <b>example (default) passwords</b> and may change in the future. To change a password, or if it no longer works, please contact your administrator (Admin) / TESR."),
         rows: [
           [L("Robot SN (หมายเลขเครื่อง)", "Robot SN"), ""],
           [L("WiFi Hotspot ของหุ่น", "Robot WiFi hotspot"), "SpeedyBot + SN"],
-          [L("รหัส WiFi (ค่าโรงงาน)", "WiFi password (factory)"), "dnk131212"],
+          [L("รหัส WiFi (รหัสตัวอย่าง*)", "WiFi password (example*)"), "dnk131212"],
           [L("บัญชีผู้ดูแล (Username)", "Admin username"), ""],
           [L("รหัสผ่าน", "Password"), ""],
           [L("หน้าสร้างแผนที่ (ต่อ WiFi หุ่นก่อน)", "Mapping page (on robot WiFi)"), "http://192.168.99.2:3578/alpha-pro-scan/index.html"],
@@ -220,13 +221,15 @@
             steps: [
               {
                 t: L("ต่อ WiFi Hotspot ของหุ่น", "Join the robot's hotspot"),
-                d: L("เปิด WiFi ในแท็บเล็ต/คอมพิวเตอร์ เลือกชื่อ <code>SpeedyBot</code> + หมายเลขเครื่อง (เช่น <code>SpeedyBot4E002625001B</code>) รหัสผ่าน <code>dnk131212</code>", "On the tablet or computer, join <code>SpeedyBot</code> + serial number (e.g. <code>SpeedyBot4E002625001B</code>), password <code>dnk131212</code>."),
+                d: L("เปิด WiFi ในแท็บเล็ต/คอมพิวเตอร์ เลือกชื่อ <code>SpeedyBot</code> + หมายเลขเครื่อง (เช่น <code>SpeedyBot4E002625001B</code>) รหัสผ่าน <code>dnk131212</code> (รหัสตัวอย่าง)", "On the tablet or computer, join <code>SpeedyBot</code> + serial number (e.g. <code>SpeedyBot4E002625001B</code>), password <code>dnk131212</code> (example password)."),
+                tip: L("<code>dnk131212</code> เป็นรหัสตัวอย่าง (ค่าเริ่มต้นจากโรงงาน) อาจเปลี่ยนแปลงได้ในอนาคต หากต้องการเปลี่ยนรหัส หรือเชื่อมต่อไม่ได้ กรุณาแจ้งแอดมิน", "<code>dnk131212</code> is an example (factory default) password and may change in the future. To change it, or if it does not connect, please contact the admin."),
                 img: [I("img/th-d07.jpg", "เลือก WiFi ของหุ่น", "Selecting the robot's WiFi")],
                 warn: L("เดินตามหุ่นตลอดและรักษาสัญญาณ WiFi ไม่น้อยกว่า 2 ขีด ถ้าหลุดนานอาจต้องเริ่มสร้างแผนที่ใหม่", "Stay with the robot and keep at least 2 bars of WiFi. A long disconnection may force you to remap."),
               },
               {
                 t: L("เปิดหน้า Open Deployment Platform", "Open the Open Deployment Platform"),
                 d: L("เปิดเบราว์เซอร์ไปที่ <code>http://192.168.99.2:3578/alpha-pro-scan/index.html</code> แล้วล็อกอินด้วยบัญชีผู้ดูแลที่ TESR มอบให้", "In a browser open <code>http://192.168.99.2:3578/alpha-pro-scan/index.html</code> and log in with the admin account from TESR."),
+                tip: L("รหัสผ่านบัญชีอาจมีการเปลี่ยนแปลง หากต้องการเปลี่ยนรหัสหรือเข้าสู่ระบบไม่ได้ กรุณาแจ้งแอดมิน", "Account passwords may change. To change yours, or if you cannot log in, please contact the admin."),
                 img: [I("img/th-d08.jpg", "หน้าเข้าสู่ระบบ (บัญชีถูกปิดบัง)", "Login page (account hidden)")],
               },
             ],
@@ -337,6 +340,7 @@
               {
                 t: L("เปิดแอป H5", "Open the H5 app"),
                 d: L("สแกน QR Code บนตัวหุ่น หรือเปิด <code>https://alpha-pro.csjbot.com</code> แล้วล็อกอินด้วยบัญชีผู้ดูแล (บัญชีเดียวกับหน้า Deployment) ติ๊กยอมรับข้อตกลงแล้วกด Login", "Scan the QR code on the robot or open <code>https://alpha-pro.csjbot.com</code>, log in with the admin account (same as the Deployment page), accept the agreement and tap Login."),
+                tip: L("รหัสผ่านอาจมีการเปลี่ยนแปลง หากต้องการเปลี่ยนรหัสหรือเข้าสู่ระบบไม่ได้ กรุณาแจ้งแอดมิน", "Passwords may change. To change yours, or if you cannot log in, please contact the admin."),
                 img: [I("img/th-d10.jpg", "QR Code บนตัวหุ่น", "QR code on the robot"), I("img/en-k05.jpg", "หน้าเข้าสู่ระบบ H5", "H5 login page")],
               },
               {
@@ -580,7 +584,8 @@
               {
                 t: L("เวลารอและรหัสรับของ", "Wait time and pickup password"),
                 d: L("ใน Delivery settings ตั้งเวลารอที่จุดส่ง/รับของ — <b>ถ้าเกินเวลา หุ่นจะยกเลิกงานและไม่ยอมเปิดฝา ต้องเริ่มใหม่</b> · ตั้งวิธีเปิดช่อง: None / Default password (รหัสตายตัว) / 4 ตัวท้ายเบอร์ / OTP", "In Delivery settings set the wait time at the point — <b>after timeout the robot cancels the task and will not open; start again</b> · choose the opening method: None / Default password / last 4 phone digits / SMS code."),
-                img: [I("img/th-d30.jpg", "ตั้งเวลารอและรหัส", "Wait time and password")],
+                img: [I("img/th-d30.jpg", "ตั้งเวลารอและรหัส (รหัสในภาพถูกปิดบัง)", "Wait time and password (password hidden)")],
+                tip: L("รหัสรับของเป็นค่าที่ตั้งเองได้และเปลี่ยนได้ทุกเมื่อ หากต้องการเปลี่ยน กรุณาแจ้งแอดมิน", "The pickup password is set by the admin and can be changed at any time — contact the admin to change it."),
               },
               {
                 t: L("จุดกลับหลังจบงาน และการรับงานใหม่", "Return point and new tasks"),

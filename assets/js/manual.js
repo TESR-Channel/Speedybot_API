@@ -179,7 +179,7 @@
     const I = M.intro;
     const creds = `<div class="creds"><h3>${t(I.creds.title)}</h3><table class="m-table cred">${I.creds.rows
       .map(([k, v]) => `<tr><td class="k">${t(k)}</td><td>${v ? `<code>${esc(v)}</code>` : `<span class="blank">${forPrint ? "" : u("fromTesr")}</span>`}</td></tr>`)
-      .join("")}</table><p class="small">${t(I.creds.note)}</p></div>`;
+      .join("")}</table>${callout("note", I.creds.pwNote)}<p class="small">${t(I.creds.note)}</p></div>`;
     return `
     <section class="m-sec intro" id="s-intro">
       <header class="m-sec-head"><span class="num">00</span><div><h2>${u("overview")}</h2><p>${t(I.lead)}</p></div></header>
