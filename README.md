@@ -5,6 +5,20 @@
 
 **เปิดใช้งาน:** https://tesr-channel.github.io/Speedybot_API/
 
+**คู่มือการใช้งาน (TH/EN + วิดีโอ):** https://tesr-channel.github.io/Speedybot_API/manual.html
+
+## คู่มือการใช้งาน (manual.html)
+
+รวมคู่มือภาษาไทยของ TESR + คู่มือผู้ผลิต (H5 Product Manual V1.1.0, Mapping Deployment Guide V1.0) เป็นขั้นตอนเดียวกัน 6 หัวข้อ — ติดตั้ง · สร้างแผนที่ · แก้ไขแผนที่ · เพิ่มจุด · สั่งงาน · ทดสอบ — แต่ละหัวข้อมีวิดีโอสอน (Google Drive) และรูปประกอบ สลับภาษาไทย/อังกฤษได้
+
+| ไฟล์ | หน้าที่ |
+|---|---|
+| `assets/manual/manual-data.js` | เนื้อหาทั้งหมด (ไทย/อังกฤษ) — แก้ที่นี่ที่เดียว ทั้งเว็บและ PDF ใช้ร่วมกัน |
+| `assets/js/manual.js`, `assets/css/manual.css` | ตัวแสดงผลหน้าเว็บ |
+| `manual-print.html`, `assets/manual/print.css` | เลย์เอาต์ A4 สำหรับสร้าง PDF (`?lang=th` / `?lang=en`) |
+| `assets/manual/Speedybot-Manual-TH.pdf`, `-EN.pdf` | PDF สำหรับส่งลูกค้า (ช่องบัญชี/รหัสผ่านเว้นว่างไว้ให้กรอก) |
+| `assets/manual/img/` | รูปประกอบ (ปิดบังบัญชี/เบอร์โทรแล้ว) |
+
 ## มีอะไรบ้าง
 
 | ส่วน | รายละเอียด |

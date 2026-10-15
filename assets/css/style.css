@@ -190,6 +190,7 @@ h1, h2, h3, h4 { font-family: var(--f-head); font-weight: 600; line-height: 1.2;
 .topnav { display: flex; gap: 2px; margin-left: 12px; }
 .topnav a { color: var(--muted); font-size: 14px; padding: 8px 12px; border-radius: 8px; text-decoration: none; }
 .topnav a:hover { color: var(--strong); background: var(--fill-2); }
+.topnav a.nav-manual { color: var(--gold-ink); border: 1px solid var(--expand-line); margin-left: 6px; }
 .top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
 .pill {

@@ -1,0 +1,138 @@
+/* TESR · Speedybot manual — A4 print layout (used to build the PDFs) */
+@page { size: A4; margin: 16mm 14mm 18mm; }
+@page :first { margin: 0; }
+:root {
+  --red: #c4192d; --red-2: #e3324a; --red-deep: #6d0b17; --gold: #b8913f; --ink: #1f0d11; --ink-2: #3c262b;
+  --muted: #6b5358; --line: #ead9dc; --fill: #fbf5f5;
+  --f-head: "Kanit", "IBM Plex Sans Thai", sans-serif; --f-body: "IBM Plex Sans Thai", "Kanit", sans-serif; --f-mono: "JetBrains Mono", monospace;
+}
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { margin: 0; background: #fff; color: var(--ink); font: 10.4pt/1.55 var(--f-body); }
+h1, h2, h3, h4 { font-family: var(--f-head); margin: 0; line-height: 1.25; font-weight: 600; }
+a { color: var(--red); text-decoration: none; word-break: break-all; }
+code { font: 9pt var(--f-mono); background: #f6e9eb; color: #8f1022; padding: 0 3px; border-radius: 3px; }
+img { max-width: 100%; display: block; }
+b { font-weight: 600; }
+svg { width: 1em; height: 1em; vertical-align: -0.12em; }
+@media screen { body { background: #777; } #print { width: 210mm; margin: 20px auto; background: #fff; padding: 16mm 14mm; } .cover { margin: -16mm -14mm 0; } }
+
+/* ---------------- cover */
+.cover {
+  width: 210mm; height: 297mm; position: relative; overflow: hidden; break-after: page; color: #fff;
+  background: radial-gradient(160mm 120mm at 90% 0%, rgba(227, 50, 74, .55), transparent 60%), linear-gradient(160deg, #2a0910 0%, #12060a 60%, #0b0406 100%);
+  padding: 18mm 16mm;
+}
+.cover::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6mm;
+  background: repeating-linear-gradient(-45deg, var(--red-2) 0 5mm, transparent 5mm 8mm, rgba(255, 255, 255, .85) 8mm 9.5mm, transparent 9.5mm 12mm);
+}
+.cv-top { display: flex; align-items: center; gap: 5mm; margin-top: 4mm; }
+.cv-top img { width: 18mm; }
+.cv-top b { display: block; font: 700 15pt var(--f-head); letter-spacing: .06em; }
+.cv-top span { font-size: 9pt; color: #e8cfd3; letter-spacing: .08em; text-transform: uppercase; }
+.cv-mid { margin-top: 20mm; position: relative; z-index: 2; }
+.eyebrow { display: inline-flex; align-items: center; gap: 3mm; font: 600 9.5pt var(--f-head); letter-spacing: .16em; text-transform: uppercase; color: #ffd2d8; }
+.eyebrow::before { content: ""; width: 12mm; height: 3mm; background: repeating-linear-gradient(-45deg, var(--red-2) 0 2mm, transparent 2mm 3.2mm); }
+.cv-mid h1 { font-size: 34pt; font-weight: 700; margin: 6mm 0 5mm; line-height: 1.15; max-width: 165mm; }
+.cv-mid p { font-size: 12.5pt; color: #f0dfe2; max-width: 150mm; margin: 0; }
+.cv-robot { position: absolute; left: 16mm; right: 16mm; bottom: 62mm; height: 112mm; width: calc(100% - 32mm); object-fit: cover; border-radius: 6mm;
+  clip-path: polygon(0 0, calc(100% - 10mm) 0, 100% 10mm, 100% 100%, 10mm 100%, 0 calc(100% - 10mm)); }
+.cv-foot { position: absolute; left: 16mm; right: 16mm; bottom: 16mm; display: flex; justify-content: space-between; align-items: flex-end; gap: 8mm; font-size: 9.5pt; color: #e8cfd3; }
+.cv-web { display: flex; gap: 4mm; align-items: center; background: #fff; color: var(--ink); border-radius: 3mm; padding: 3mm 4mm 3mm 3mm; max-width: 120mm; }
+.cv-web .qr { width: 24mm; height: 24mm; }
+.cv-web b { display: block; font: 600 10.5pt var(--f-head); }
+.cv-web a { display: block; font-size: 8.6pt; }
+.cv-web span { display: block; font-size: 8.6pt; color: var(--muted); }
+
+/* ---------------- toc */
+.toc-page { break-after: page; }
+.toc-page h2, .m-sec-head h2 { color: var(--ink); }
+.toc-page h2 { font-size: 22pt; margin-bottom: 8mm; padding-bottom: 3mm; border-bottom: 1.2mm solid var(--red); display: inline-block; }
+.ptoc { list-style: none; margin: 0 0 12mm; padding: 0; }
+.ptoc li { display: grid; grid-template-columns: 14mm 1fr; gap: 1mm 4mm; padding: 4mm 0; border-bottom: 0.3mm solid var(--line); }
+.ptoc .n { grid-row: span 2; font: 700 18pt var(--f-mono); color: var(--red); }
+.ptoc .tt { font: 600 13pt var(--f-head); }
+.ptoc .vt { font-size: 9pt; color: var(--muted); }
+.ptoc .vt svg { color: var(--red); }
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 2mm; }
+.flow li { border: 0.3mm solid var(--line); border-radius: 2.5mm; padding: 2.5mm; text-align: center; font: 500 9.5pt var(--f-head); background: var(--fill); }
+.flow li b { display: block; margin: 0 auto 1mm; width: 8mm; height: 8mm; line-height: 8mm; border-radius: 2mm; background: var(--red); color: #fff; font: 700 10pt var(--f-mono); }
+
+/* ---------------- sections */
+.m-sec { break-before: page; }
+.m-sec.support { break-before: auto; margin-top: 10mm; padding: 5mm; border: 0.3mm solid var(--line); border-radius: 3mm; background: var(--fill); }
+.m-sec.support h3 { font-size: 13pt; margin-bottom: 2mm; }
+.m-sec.support p { margin: 0 0 2mm; }
+.m-sec-head { display: flex; gap: 5mm; align-items: flex-start; margin-bottom: 5mm; padding-bottom: 4mm; border-bottom: 0.6mm solid var(--red); }
+.m-sec-head .num { flex: none; width: 16mm; height: 16mm; display: grid; place-items: center; border-radius: 3mm; background: var(--red); color: #fff; font: 700 17pt var(--f-mono); }
+.m-sec-head h2 { font-size: 19pt; margin-bottom: 1.5mm; }
+.m-sec-head p { margin: 0; color: var(--muted); font-size: 10pt; }
+
+.m-group { margin-top: 6mm; }
+.m-group h3 { font-size: 13.5pt; color: var(--red-deep); margin-bottom: 3mm; padding-left: 3mm; border-left: 1.4mm solid var(--red); break-after: avoid; }
+.m-steps { list-style: none; margin: 0; padding: 0; }
+.m-step { display: grid; grid-template-columns: 11mm 1fr; gap: 4mm; padding: 2.5mm 0 3.5mm; border-bottom: 0.25mm dashed var(--line); }
+.m-step .sb > h4 { break-after: avoid; }
+.m-step:last-child { border-bottom: 0; }
+.m-step .sn { width: 10mm; height: 10mm; border-radius: 50%; border: 0.6mm solid var(--red); display: grid; place-content: center; text-align: center; font: 700 12pt/1 var(--f-mono); color: var(--red-deep); }
+.m-step .sn small { display: none; }
+.m-step h4 { font-size: 11.5pt; margin: 1.5mm 0 1mm; }
+.m-step p { margin: 0 0 2mm; color: var(--ink-2); }
+
+.shots { display: flex; flex-wrap: wrap; gap: 3mm; margin: 2mm 0 1mm; }
+.shots figure { margin: 0; flex: 0 1 auto; max-width: 100%; break-inside: avoid; }
+.shot { all: unset; display: block; border: 0.3mm solid var(--line); border-radius: 2mm; overflow: hidden; background: #fff; }
+.shot img { max-height: 72mm; max-width: 100%; width: auto; }
+.shots figcaption { font-size: 8pt; color: var(--muted); margin-top: 1mm; max-width: 80mm; }
+.intro .shots .shot img { max-height: 62mm; }
+
+.callout { display: flex; gap: 2.5mm; padding: 2.2mm 3mm; border-radius: 2mm; margin: 2mm 0; font-size: 9.6pt; border: 0.3mm solid; break-inside: avoid; }
+.callout .ci { flex: none; color: inherit; }
+.callout b { margin-right: 1mm; }
+.callout.warn { background: #fff1f3; border-color: #f2b3bd; } .callout.warn .ci, .callout.warn b { color: #c21d35; }
+.callout.tip { background: #edfaf3; border-color: #a7e3c6; } .callout.tip .ci, .callout.tip b { color: #0d8f62; }
+.callout.note { background: #fff7e8; border-color: #f0cf8d; } .callout.note .ci, .callout.note b { color: #a5650c; }
+.callout.key { background: #fff6e0; border-color: #d9b867; } .callout.key .ci, .callout.key b { color: #8a6413; }
+
+.m-table { width: 100%; border-collapse: collapse; font-size: 9.2pt; margin: 2mm 0 3mm; break-inside: auto; }
+.m-table th { text-align: left; background: var(--red); color: #fff; font: 600 9pt var(--f-head); padding: 1.8mm 2.5mm; }
+.m-table td { border-bottom: 0.25mm solid var(--line); padding: 1.8mm 2.5mm; vertical-align: top; }
+.m-table tr { break-inside: avoid; }
+.m-table td.k { font-weight: 600; }
+.m-table.faq td.k { width: 40%; }
+
+.vbox.print { display: flex; gap: 4mm; align-items: center; padding: 3mm; border-radius: 3mm; margin-bottom: 4mm; border: 0.4mm solid var(--red); background: linear-gradient(90deg, #fff1f3, #fff 70%); break-inside: avoid; }
+.vbox .qr { width: 26mm; height: 26mm; flex: none; }
+.vbox .vk { display: block; font: 600 8.5pt var(--f-head); letter-spacing: .12em; text-transform: uppercase; color: var(--red); }
+.vbox b { display: block; font: 600 12pt var(--f-head); margin: .5mm 0; }
+.vbox a { display: block; font-size: 8.6pt; }
+.vbox small { color: var(--muted); font-size: 8.5pt; }
+
+.intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-top: 4mm; }
+.intro h3 { font-size: 12.5pt; margin-bottom: 2mm; }
+.m-bullets { margin: 0; padding-left: 5mm; }
+.m-bullets li { margin-bottom: 1.2mm; }
+.m-bullets li::marker { color: var(--red); }
+.creds { border: 0.4mm solid #d9b867; background: #fffaf0; border-radius: 3mm; padding: 3mm; break-inside: avoid; }
+.creds .m-table { margin: 0; font-size: 8.8pt; }
+.creds .m-table td { padding: 1.6mm 1.5mm; }
+.creds .blank { display: block; border-bottom: 0.3mm solid #b8913f; height: 5mm; }
+.creds code { word-break: break-all; font-size: 8pt; }
+.small { font-size: 8.4pt; color: var(--muted); margin: 2mm 0 0; }
+.safety { margin-top: 5mm; border: 0.4mm solid #f2b3bd; background: #fff5f6; border-radius: 3mm; padding: 3mm 4mm; break-inside: avoid; }
+.safety h3 svg { color: #c21d35; }
+
+.checklist { list-style: none; margin: 0; padding: 0; }
+.checklist li { display: flex; gap: 3mm; align-items: flex-start; padding: 2mm 0; border-bottom: 0.25mm solid var(--line); break-inside: avoid; }
+.checklist .box { flex: none; width: 4.5mm; height: 4.5mm; border: 0.5mm solid var(--red); border-radius: 1mm; margin-top: .6mm; }
+
+/* compact: one-image steps put the picture beside the text */
+.m-step .sb:has(> .shots.one):not(:has(table)):not(:has(.wide)) { display: grid; grid-template-columns: minmax(0, 1fr) 82mm; column-gap: 5mm; align-items: start; }
+.m-step .sb:has(> .shots.one):not(:has(table)):not(:has(.wide)) > * { grid-column: 1; }
+.m-step .sb:has(> .shots.one):not(:has(table)):not(:has(.wide)) > .shots { grid-column: 2; grid-row: 1 / span 6; margin-top: 1.5mm; }
+.m-step .sb:has(> .shots.one):not(:has(table)):not(:has(.wide)) .shot img { max-height: 62mm; }
+.shots:not(.one) .shot img { max-height: 64mm; }
+.shots.one .wide .shot img { max-height: 95mm; }
+.shots.one .wide figcaption { max-width: none; }
+.m-step:has(.shots.one), .m-step:not(:has(.shots)) { break-inside: avoid; }
+.m-sec.support { break-inside: avoid; }
