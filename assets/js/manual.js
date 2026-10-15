@@ -34,6 +34,7 @@
       watch: "ดูวิดีโอสอน",
       openDrive: "เปิดใน Google Drive",
       videoNote: "วิดีโอเปิดผ่าน Google Drive",
+      vkeys: "กดเล่น/หยุด · ลากแถบเวลาเพื่อเลื่อน · ปรับความเร็ว 0.5–2× · เต็มจอ",
       step: "ขั้นที่",
       warn: "ข้อควรระวัง",
       tip: "เคล็ดลับ",
@@ -67,6 +68,7 @@
       watch: "Watch the tutorial",
       openDrive: "Open in Google Drive",
       videoNote: "Videos play from Google Drive",
+      vkeys: "Play/pause · drag the timeline to seek · speed 0.5–2× · fullscreen",
       step: "Step",
       warn: "Caution",
       tip: "Tip",
@@ -160,13 +162,13 @@
       const qr = window.QR && window.QR[s.video];
       return `<div class="vbox print">${qr ? `<img class="qr" src="${qr}" alt="QR" />` : ""}<div><span class="vk">${ICON.play} ${u("tutorial")}</span><b>${t(v.title)}</b><a href="${v.view}">${v.view}</a><small>${u("scan")}</small></div></div>`;
     }
-    return `<div class="vbox" data-embed="${v.embed}">
+    return `<div class="vbox" data-vid="${s.video}">
       <button type="button" class="vplay" aria-label="${esc(u("watch"))}">
         <span class="vbg"></span>
         <span class="vbtn">${ICON.play}</span>
         <span class="vtxt"><small>${u("tutorial")}</small><b>${t(v.title)}</b></span>
       </button>
-      <div class="vfoot"><span>${u("videoNote")}</span><a href="${v.view}" target="_blank" rel="noopener">${u("openDrive")} ${ICON.ext}</a></div>
+      <div class="vfoot"><span class="vkeys">${u("vkeys")}</span><a href="${v.view}" target="_blank" rel="noopener">${u("openDrive")} ${ICON.ext}</a></div>
     </div>`;
   };
 
@@ -275,18 +277,20 @@
     observe();
   }
 
-  /* video: load iframe on demand */
+  /* video: TESR player (seek / speed / fullscreen) with Google Drive fallback */
   document.addEventListener("click", (e) => {
     const p = e.target.closest(".vplay");
     if (!p) return;
     const box = p.closest(".vbox");
-    const f = document.createElement("iframe");
-    f.src = box.dataset.embed;
-    f.allow = "autoplay; fullscreen";
-    f.allowFullscreen = true;
-    f.setAttribute("title", p.querySelector("b").textContent);
-    p.replaceWith(f);
-    box.classList.add("on");
+    const v = M.videos[box.dataset.vid];
+    if (!v) return;
+    const opts = { src: v.stream, embed: v.embed, view: v.view, title: t(v.title), key: box.dataset.vid, lang, poster: "assets/img/speedybot-lidar.jpg" };
+    if (window.TesrPlayer) window.TesrPlayer.mount(box, opts);
+    else {
+      const f = document.createElement("iframe");
+      f.src = v.embed; f.allow = "autoplay; fullscreen"; f.allowFullscreen = true; f.title = opts.title;
+      p.replaceWith(f); box.classList.add("on");
+    }
   });
 
   /* language */

@@ -14,6 +14,8 @@
     id,
     view: "https://drive.google.com/file/d/" + id + "/view",
     embed: "https://drive.google.com/file/d/" + id + "/preview",
+    // direct stream for the TESR player (falls back to the Drive player if it fails)
+    stream: "https://drive.usercontent.google.com/download?id=" + id + "&export=download&confirm=t",
   });
 
   window.MANUAL = {
