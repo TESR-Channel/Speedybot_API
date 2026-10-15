@@ -370,3 +370,12 @@ body.noscroll { overflow: hidden; }
   .vfoot a { font-size: 12.5px; }
 }
 @media (max-width: 380px) { .vp-back, .vp-fwd { display: none; } }
+
+/* video card = link to Google Drive */
+a.vplay { color: #fff; text-decoration: none !important; }
+a.vplay[hidden] { display: none; }
+.vtxt small svg { width: 12px; height: 12px; vertical-align: -1px; }
+.vtxt em { display: block; font-style: normal; font-size: 13.5px; color: #f3dade; margin-top: 4px; }
+.vp-inline { all: unset; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--gold-ink); white-space: nowrap; }
+.vp-inline:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 639px) { .vtxt em { display: none; } .vplay .vbtn { top: 40%; width: 56px; height: 56px; } .vplay .vbtn svg { width: 24px; height: 24px; } .vp-inline { font-size: 12.5px; } }
